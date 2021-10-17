@@ -1,0 +1,13 @@
+* Jupitercandle 
+
+** Usage
+
+** Installation
+
+** Author
+
++ entropic games
+
+** Copyright
+
+Copyright (c) 2021 entropic games
