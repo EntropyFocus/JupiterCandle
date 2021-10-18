@@ -5,8 +5,7 @@
 (defparameter *universe-step* 0.014)
 (defparameter *step-split* 10)
 
-(defvar *player* nil)
-(defvar *universe* nil)
+(defvar *player-pos* (gamekit:vec2 200.0 200.0))
 
 (gamekit:defgame jupiter-game ()
   ())
@@ -51,5 +50,6 @@
 ;;       (gamekit:draw-rect position 20 20)
 ;;       (gamekit:draw-text "o_O" position))))
 
-(gamekit:start 'jupiter-game)
+(defun main ()
+  (gamekit:start 'jupiter-game))
 
