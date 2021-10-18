@@ -2,7 +2,7 @@
   :version "0.1.0"
   :author "entropic games"
   :license ""
-  :depends-on ("trivial-gamekit")
+  :depends-on ("trivial-gamekit" "cl-bodge/physics" "cl-bodge/physics/2d")
   :components ((:module "src"
                 :components
                 ((:file "main"))))
