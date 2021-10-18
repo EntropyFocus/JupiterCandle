@@ -1,5 +1,4 @@
-(defpackage JupiterCandle
+(defpackage jupiter-candle
   (:use :cl))
-(in-package :JupiterCandle)
+(in-package :jupiter-candle)
 
-;; blah blah blah.

@@ -1,4 +1,4 @@
-(defsystem "JupiterCandle"
+(defsystem "jupiter-candle"
   :version "0.1.0"
   :author "entropic games"
   :license ""
@@ -9,10 +9,10 @@
   :description ""
   :in-order-to ((test-op (test-op "JupiterCandle/tests"))))
 
-(defsystem "JupiterCandle/tests"
+(defsystem "jupiter-candle/tests"
   :author "entropic games"
   :license ""
-  :depends-on ("JupiterCandle"
+  :depends-on ("jupiter-candle"
                "rove")
   :components ((:module "tests"
                 :components
