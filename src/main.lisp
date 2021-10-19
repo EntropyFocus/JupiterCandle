@@ -26,18 +26,18 @@
         (move-player *player* (gamekit:vec2 0 15)))
       ()))
 
-(defun run ()
-  (if (and *left-pressed* (not *right-pressed*))
-      (setf *desired-run-state* -1)
-      (if (and *right-pressed* (not *left-pressed*))
-          (setf *desired-run-state* 1)
-          (setf *desired-run-state* 0))))
-
 (defun update-run ()
   (when *on-ground*
+    (if (and *left-pressed* (not *right-pressed*))
+        (setf *desired-run-state* -1)
+        (if (and *right-pressed* (not *left-pressed*))
+            (setf *desired-run-state* 1)
+            (setf *desired-run-state* 0)))
     (when (< *run-state* *desired-run-state*)
+      (incf *run-state*)
       (move-player *player* (gamekit:vec2 10 0)))
     (when (> *run-state* *desired-run-state*)
+      (decf *run-state*)
       (move-player *player* (gamekit:vec2 -10 0)))))
 
 (gamekit:defgame jupiter-game ()
