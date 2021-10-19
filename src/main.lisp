@@ -7,6 +7,7 @@
 (defvar *universe* nil)
 
 (defvar *on-ground* nil)
+(defvar *jumped-recently* 0)
 (defvar *left-pressed* nil)
 (defvar *right-pressed* nil)
 (defvar *up-pressed* nil)
@@ -23,6 +24,7 @@
   (if *on-ground*
       (progn
         (setf *on-ground* nil)
+        (setf *jumped-recently* 5)
         (move-player *player* (gamekit:vec2 0 15)))
       ()))
 
@@ -39,6 +41,11 @@
     (when (> *run-state* *desired-run-state*)
       (decf *run-state*)
       (move-player *player* (gamekit:vec2 -10 0)))))
+
+(defun update-on-ground ()
+  (when (> *jumped-recently* 0)
+    (setf *on-ground* nil)
+    (decf *jumped-recently*)))
 
 (gamekit:defgame jupiter-game ()
   ()
@@ -69,7 +76,8 @@
 (defmethod gamekit:act ((this jupiter-game))
   (loop for i from 0 below *step-split* do
         (ge.phy:observe-universe *universe* (/ *universe-step* *step-split*)))
-  (update-run))
+  (update-run)
+  (update-on-ground))
 
 (defclass player ()
   ((body :initarg :body
