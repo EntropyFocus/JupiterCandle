@@ -8,7 +8,7 @@
 (defvar *player* nil)
 (defvar *universe* nil)
 
-(defvar *player-v* nil)
+(defvar *player-v* (gamekit:vec2 0 0))
 
 (defvar *on-ground* nil)
 (defvar *jumped-recently* 0)
@@ -43,7 +43,11 @@
         (desired-vx (* *desired-run-state* *max-speed*))
         (vx (gamekit:x *player-v*))
         (delta-vx (if *on-ground* 1 0.2)))
-    (when (< (abs (- vx desired-vx)) 10)
+    (when (< (abs (- vx desired-vx)) 20)
+      (setf delta-vx (/ delta-vx 10)))
+    (when (< (abs (- vx desired-vx)) 5)
+      (setf delta-vx (/ delta-vx 10)))
+    (when (< (abs (- vx desired-vx)) 1)
       (setf delta-vx (/ delta-vx 10)))
     (when (< vx desired-vx)
       (move-player *player* (gamekit:vec2 delta-vx 0)))
