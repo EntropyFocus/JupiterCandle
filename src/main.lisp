@@ -3,8 +3,12 @@
 (defparameter *universe-step* 0.014)
 (defparameter *step-split* 10)
 
+(defparameter *max-speed* 150)
+
 (defvar *player* nil)
 (defvar *universe* nil)
+
+(defvar *player-v* nil)
 
 (defvar *on-ground* nil)
 (defvar *jumped-recently* 0)
@@ -29,18 +33,24 @@
       ()))
 
 (defun update-run ()
-  (when *on-ground*
-    (if (and *left-pressed* (not *right-pressed*))
-        (setf *desired-run-state* -1)
-        (if (and *right-pressed* (not *left-pressed*))
-            (setf *desired-run-state* 1)
-            (setf *desired-run-state* 0)))
-    (when (< *run-state* *desired-run-state*)
-      (incf *run-state*)
-      (move-player *player* (gamekit:vec2 10 0)))
-    (when (> *run-state* *desired-run-state*)
-      (decf *run-state*)
-      (move-player *player* (gamekit:vec2 -10 0)))))
+  (if (and *left-pressed* (not *right-pressed*))
+      (setf *desired-run-state* -1)
+      (if (and *right-pressed* (not *left-pressed*))
+          (setf *desired-run-state* 1)
+          (setf *desired-run-state* 0)))
+  
+  (let (
+        (desired-vx (* *desired-run-state* *max-speed*))
+        (vx (gamekit:x *player-v*))
+        (delta-vx (if *on-ground* 1 0.2)))
+    (when (< (abs (- vx desired-vx)) 10)
+      (setf delta-vx (/ delta-vx 10)))
+    (when (< vx desired-vx)
+      (move-player *player* (gamekit:vec2 delta-vx 0)))
+    (when (> vx desired-vx)
+      (move-player *player* (gamekit:vec2 (- delta-vx) 0)))
+    )
+  )
 
 (defun update-on-ground ()
   (when (> *jumped-recently* 0)
@@ -77,7 +87,8 @@
   (loop for i from 0 below *step-split* do
         (ge.phy:observe-universe *universe* (/ *universe-step* *step-split*)))
   (update-run)
-  (update-on-ground))
+  (update-on-ground)
+  (setf *player-v* (ge.phy:body-linear-velocity (body *player*))))
 
 (defclass player ()
   ((body :initarg :body
