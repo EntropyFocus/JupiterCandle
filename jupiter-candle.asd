@@ -8,6 +8,8 @@
                 ((:file "packages")
                  (:file "timer")
                  (:file "element")
+                 (:file "player")
+                 (:file "gamestate")
                  (:file "main")
                  (:file "ui"))))
   :description ""
