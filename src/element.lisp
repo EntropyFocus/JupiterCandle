@@ -45,8 +45,9 @@
     (ge.phy:make-box-shape *universe* 100 20 :offset (gamekit:vec2 50 10) :body body :substance this)))
 
 (defmethod render ((this jump-ring-element))
-  (gamekit:draw-circle (element-position this) 5 :fill-paint (gamekit:vec4 1 0 0 1))
-  (gamekit:draw-rect (element-position this) 100 20 :fill-paint (gamekit:vec4 1 1 0 1)))
+  (with-slots (activated) this
+    (gamekit:draw-circle (element-position this) 5 :fill-paint (gamekit:vec4 1 0 0 1))
+    (gamekit:draw-rect (element-position this) 100 20 :fill-paint (gamekit:vec4 1 (if activated 1 0.5) 0 1))))
 
 ;; Level initialization
 
