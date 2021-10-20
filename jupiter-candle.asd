@@ -9,6 +9,7 @@
                  (:file "timer")
                  (:file "element")
                  (:file "player")
+                 (:file "background")
                  (:file "gamestate")
                  (:file "main")
                  (:file "ui"))))

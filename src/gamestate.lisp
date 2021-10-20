@@ -75,6 +75,7 @@ TODO: replace this with a more generic approach")
 ;;-----------------
 
 (defun gamestate-draw (gamestate)
+  (draw-background)
   (with-slots (player elements) gamestate
     (dolist (item elements)
       (render item))
