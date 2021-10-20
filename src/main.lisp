@@ -5,6 +5,8 @@
 
 (defparameter *max-speed* 150)
 
+(defparameter *player-size* (gamekit:vec2 30 80))
+
 (defvar *player* nil)
 (defvar *universe* nil)
 
@@ -19,10 +21,30 @@
 (defvar *desired-run-state* 0) 
 (defvar *run-state* 0)
 
-(defun trivial-collide (this-shape that-shape)
-  (declare (ignore this-shape))
-  (declare (ignore that-shape))
-  (setf *on-ground* t))
+(defvar *level-elements* nil)
+(defvar *ground-shape* nil)
+
+(defvar *activated-level-elements* nil)
+
+(defun pre-collide-handler (this-shape that-shape)
+  (let ((other-shape (if (eq this-shape (slot-value *player* 'shape)) that-shape this-shape)))
+    (if (eq other-shape *ground-shape*)
+        (progn
+          (setf *on-ground* t)
+          t)
+        (pre-collision (ge.phy:shape-substance that-shape)))))
+
+(defgeneric pre-collision (that)
+  (:documentation "Pre-collision handling of player and THAT.
+Return t if collision should be handled by physics engine."))
+
+(defmethod pre-collision ((that level-element))
+  (when (not (find that *activated-level-elements*))
+    (push that *activated-level-elements*)
+    (move-player *player* (gamekit:vec2 0 50))
+    (add-timer (+ (now) 2)
+               (lambda () (setf *activated-level-elements* (delete that *activated-level-elements*)))))
+  nil)
 
 (defun jump ()
   (if *on-ground*
@@ -67,19 +89,23 @@
 
 (defmethod gamekit:draw ((this jupiter-game))
   (render *player*)
+  (dolist (item *level-elements*)
+    (render item))
   (gamekit:draw-rect (gamekit:vec2 0 10) 1000 2 :fill-paint (gamekit:vec4 1 0 0 1))
   (gamekit:draw-text (format nil "Player pos: ~a"
                              (player-position *player*))
                      (gamekit:vec2 0 0)))
 
 (defmethod gamekit:post-initialize ((this jupiter-game))
-  (setq *universe* (ge.phy:make-universe :2d :on-post-solve #'trivial-collide))
+  (setq *universe* (ge.phy:make-universe :2d :on-pre-solve #'pre-collide-handler))
   (setf (ge.phy:gravity *universe*) (gamekit:vec2 0 -400))
 
   (setq *player* (make-player :position (gamekit:vec2 100.0 100.0) :universe *universe*))
 
   ;; Floor
-  (ge.phy:make-box-shape *universe* 1000 2 :offset (gamekit:vec2 0 10))
+  (setq *ground-shape* (ge.phy:make-box-shape *universe* 1000 2 :offset (gamekit:vec2 0 10)))
+
+  (setq *level-elements* (init-level-elements))
 
   (gamekit:bind-button :up :pressed #'jump)
   (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))
@@ -88,6 +114,7 @@
   (gamekit:bind-button :right :released (lambda () (setf *right-pressed* nil))))
 
 (defmethod gamekit:act ((this jupiter-game))
+  (process-timers)
   (loop for i from 0 below *step-split* do
         (ge.phy:observe-universe *universe* (/ *universe-step* *step-split*)))
   (update-run)
@@ -101,7 +128,10 @@
 
 (defun make-player (&key position (universe *universe*))
   (let* ((body (ge.phy:make-rigid-body universe))
-         (shape (ge.phy:make-box-shape universe 20 20 :body body)))
+         (shape (ge.phy:make-box-shape universe
+                                       (gamekit:x *player-size*) (gamekit:y *player-size*)
+                                       :body body
+                                       :offset (gamekit:mult *player-size* 0.5))))
     (setf (ge.phy:body-position body) position)
     (make-instance 'player :body body :shape shape)))
 
@@ -116,7 +146,9 @@
 
 (defmethod render ((this player))
   (let ((position (player-position this)))
-    (gamekit:draw-rect position 20 20)
+    (gamekit:draw-circle position 5 :fill-paint (gamekit:vec4 1 0 0 1))
+    (gamekit:draw-rect position (gamekit:x *player-size*) (gamekit:y *player-size*)
+                       :stroke-paint (gamekit:vec4 1 0 0 1))
     (gamekit:draw-text "o_O" position)))
 
 (defun main ()
