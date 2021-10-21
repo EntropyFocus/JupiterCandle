@@ -59,7 +59,8 @@ TODO: replace this with a more generic approach")
 (defun gamestate-step (gamestate)
   (update-run gamestate)
   (update-on-ground gamestate)
-  (update-level gamestate 500))
+  (with-slots (player) gamestate
+    (update-level gamestate (+ 20 (gamekit:y (ge.phy:body-position (body player)))))))
 
 ;; ----------------
 
@@ -68,7 +69,7 @@ TODO: replace this with a more generic approach")
     (when on-ground
       (setf on-ground nil)
       (setf jumped-recently 5)
-      (move-player player (gamekit:vec2 0 15)))))
+      (move-player player (gamekit:vec2 0 20)))))
 
 ;;-----------------
 
@@ -117,9 +118,29 @@ physics engine should apply collision effects."
 
 ;; Level update, dass elements to the level based on desired height
 
+(defparameter *1-object-1-in* 2)
+(defparameter *2-object-1-in* 3)
+(defparameter *platform-1-in* 2)
+(defparameter *portal-1-in* 2)
+
+(defun place-object (gamestate)
+  (with-slots (elements) gamestate
+    (if (= 0 (random *platform-1-in*))
+        (progn
+          (push (make-instance 'floor-element :position (gamekit:vec2 (random 900) *level-height*) :width 100) elements))
+        (progn
+          (when (= 0 (random *portal-1-in*))
+            (push (make-instance 'jump-ring-element :position (gamekit:vec2 (random 900) *level-height*)) elements))))
+    )) 
+
 (defun update-level (gamestate desired-height)
   (with-slots (elements) gamestate
     (when (> desired-height *level-height*)
       (incf *level-height* 50)
-      (push (make-instance 'jump-ring-element :position (gamekit:vec2 300 *level-height*)) elements))))
+      (if (= 0 (random *1-object-1-in*))
+          (place-object gamestate)
+          (progn
+            (when (= 0 (random *2-object-1-in*))
+              (place-object gamestate)
+              #++(place-object gamestate)))))))
 
