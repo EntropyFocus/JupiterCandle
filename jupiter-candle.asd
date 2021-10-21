@@ -7,9 +7,10 @@
                 :components
                 ((:file "packages")
                  (:file "timer")
+                 (:file "sprite")
                  (:file "element")
-                 (:file "player")
                  (:file "background")
+                 (:file "player")
                  (:file "gamestate")
                  (:file "main")
                  (:file "ui"))))

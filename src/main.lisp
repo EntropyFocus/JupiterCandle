@@ -1,5 +1,8 @@
 (in-package :jupiter-candle)
 
+(defvar *last-timestamp* 0
+  "Helper variable to calculate *elapsed-time*")
+
 (gamekit:defgame jupiter-game ()
   ((gamestate :initform nil :accessor jupiter-gamestate))
   (:viewport-title "Jupiter Candle")
@@ -8,7 +11,13 @@
   ;(:fullscreen-p t)
   )
 
+(defun update-elapsed-time ()
+  (let ((time (now)))
+    (setf *elapsed-time* (* (- time *last-timestamp*) 1000))
+    (setf *last-timestamp* time)))
+
 (defmethod gamekit:draw ((this jupiter-game))
+  (update-elapsed-time)
   (gamestate-draw (jupiter-gamestate this)))
 
 (defmethod gamekit:post-initialize ((this jupiter-game))
@@ -18,6 +27,8 @@
                                                                              this-shape that-shape))))
   (setf (ge.phy:gravity *universe*) (gamekit:vec2 0 -400))
   (setf (jupiter-gamestate this) (make-instance 'gamestate))
+
+  (setf *last-timestamp* (now))
 
   (gamekit:bind-button :up :pressed #'(lambda () (jump (jupiter-gamestate this))))
   (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))
