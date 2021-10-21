@@ -61,7 +61,7 @@ TODO: replace this with a more generic approach")
   (update-run gamestate)
   (update-on-ground gamestate)
   (with-slots (player) gamestate
-    (update-level gamestate (+ 20 (gamekit:y (ge.phy:body-position (body player)))))))
+    (update-level gamestate (+ 500 (gamekit:y (ge.phy:body-position (body player)))))))
 
 ;; ----------------
 
