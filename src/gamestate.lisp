@@ -19,18 +19,24 @@
     :documentation "List of level elements the player can interact with")
    (player :initform (make-instance 'player :universe *universe*
                                             :position (gamekit:vec2 100 200)))
-   (on-ground :initform nil
-    :documentation "True if player is connected to the ground.
-TODO: replace this with a more generic approach")
-   (jumped-recently :initform 0
-    :documentation "todo")
+   (states :initform nil)
    (desired-run-state :initform 0)
    (run-state :initform 0)))
 
 ;;-----------------
 
+(defun player-push-state (gamestate state)
+  (pushnew state (slot-value gamestate 'states)))
+
+(defun player-remove-state (gamestate state)
+  (with-slots (states) gamestate
+    (setf states (delete state states))))
+
+(defun player-has-state (gamestate state)
+  (member state (slot-value gamestate 'states)))
+
 (defun update-run (gamestate)
-  (with-slots (desired-run-state on-ground player) gamestate
+  (with-slots (desired-run-state player) gamestate
     (if (and *left-pressed* (not *right-pressed*))
         (setf desired-run-state -1)
         (if (and *right-pressed* (not *left-pressed*))
@@ -39,7 +45,7 @@ TODO: replace this with a more generic approach")
   
     (let ((desired-vx (* desired-run-state *max-speed*))
           (vx (gamekit:x (player-speed player)))
-          (delta-vx (if on-ground 1 0.2)))
+          (delta-vx (if (player-has-state gamestate :on-ground) 1 0.2)))
       (when (< (abs (- vx desired-vx)) 20)
         (setf delta-vx (/ delta-vx 10)))
       (when (< (abs (- vx desired-vx)) 5)
@@ -51,25 +57,21 @@ TODO: replace this with a more generic approach")
       (when (> vx desired-vx)
         (move-player player (gamekit:vec2 (- delta-vx) 0))))))
 
-(defun update-on-ground (gamestate)
-  (with-slots (jumped-recently on-ground) gamestate
-    (when (> jumped-recently 0)
-      (setf on-ground nil)
-      (decf jumped-recently))))
-
 (defun gamestate-step (gamestate)
-  (update-run gamestate)
-  (update-on-ground gamestate)
   (with-slots (player) gamestate
-    (update-level gamestate (+ 20 (gamekit:y (ge.phy:body-position (body player)))))))
+    (when (> (abs (gamekit:y (player-speed player))) 10)
+      (player-remove-state gamestate :on-ground))
+    (update-run gamestate)
+    (update-level gamestate (+ 20 (gamekit:y (player-position player))))))
 
 ;; ----------------
 
 (defun jump (gamestate)
-  (with-slots (on-ground player jumped-recently) gamestate
-    (when on-ground
-      (setf on-ground nil)
-      (setf jumped-recently 5)
+  (with-slots (player) gamestate
+    (when (player-has-state gamestate :on-ground)
+      (player-remove-state gamestate :on-ground)
+      (player-push-state gamestate :jumped-recently)
+      (add-timer (+ (now) 0.3) (lambda () (player-remove-state gamestate :jumped-recently)))
       (move-player player (gamekit:vec2 0 20)))))
 
 ;;-----------------
@@ -83,7 +85,9 @@ TODO: replace this with a more generic approach")
           (gamekit:translate-canvas 0 y-offset))
         (dolist (item elements)
           (render item))
-        (render player)))))
+        (render player)))
+    (gamekit:draw-text (format nil "Player State: ~a" (slot-value gamestate 'states))
+                       (gamekit:vec2 0 460) :fill-color (gamekit:vec4 1 1 1 1))))
 
 
 ;;; COLLISION HANDLING
@@ -103,11 +107,10 @@ physics engine should apply collision effects."
       (handle-element-pre-collision element gamestate))))
 
 (defmethod handle-element-pre-collision ((element floor-element) gamestate)
-  (with-slots (on-ground) gamestate
-    (setf on-ground t))
+  (when (not (player-has-state gamestate :jumped-recently))
+    (player-push-state gamestate :on-ground))
   (setf (ge.phy:collision-friction)         1.0)
   (setf (ge.phy:collision-elasticity)       0.0)
-  ;(setf (ge.phy:collision-surface-velocity) 0.0)
   t)
 
 (defmethod handle-element-pre-collision ((element jump-ring-element) gamestate)

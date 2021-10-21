@@ -28,11 +28,6 @@
           shape (ge.phy:make-circle-shape universe (/ (gamekit:y *player-size*) 2)
                                           :body body
                                           :substance this)
-          ;; (ge.phy:make-box-shape universe
-          ;;                              (gamekit:x *player-size*)
-          ;;                              (gamekit:y *player-size*)
-          ;;                              :body body
-          ;;                              :substance this)
           (ge.phy:body-position body) position)))
 
 (defun player-position (player)
@@ -52,8 +47,6 @@
     (gamekit:draw-circle position 5 :fill-paint (gamekit:vec4 1 0 0 1))
     (gamekit:draw-circle position (/ (gamekit:y *player-size*) 2)
                          :stroke-paint (gamekit:vec4 1 0 0 1))
-    #++(gamekit:draw-rect origin (gamekit:x *player-size*) (gamekit:y *player-size*)
-                       :stroke-paint (gamekit:vec4 1 0 0 1))
     (draw-animated-sprite (slot-value this 'sprite) position)))
 
 
