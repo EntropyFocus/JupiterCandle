@@ -17,7 +17,8 @@
   ((elements
     :initform (init-level-elements)
     :documentation "List of level elements the player can interact with")
-   (player :initform (make-instance 'player :universe *universe* :position (gamekit:vec2 100 100)))
+   (player :initform (make-instance 'player :universe *universe*
+                                            :position (gamekit:vec2 100 200)))
    (on-ground :initform nil
     :documentation "True if player is connected to the ground.
 TODO: replace this with a more generic approach")
@@ -103,6 +104,9 @@ physics engine should apply collision effects."
 (defmethod handle-element-pre-collision ((element floor-element) gamestate)
   (with-slots (on-ground) gamestate
     (setf on-ground t))
+  (setf (ge.phy:collision-friction)         1.0)
+  (setf (ge.phy:collision-elasticity)       0.0)
+  ;(setf (ge.phy:collision-surface-velocity) 0.0)
   t)
 
 (defmethod handle-element-pre-collision ((element jump-ring-element) gamestate)

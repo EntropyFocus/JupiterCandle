@@ -2,8 +2,8 @@
 
 (gamekit:define-image jupiter-candle::player-anim "textures/player.png")
 
-(defparameter *player-size* (gamekit:vec2 30 80))
-(defparameter *player-origin* (gamekit:vec2 15 0))
+(defparameter *player-size* (gamekit:vec2 30 42))
+(defparameter *player-origin* (gamekit:div *player-size* 2))
 
 (defparameter *player-animations*
   (make-animated-sprite-resource
@@ -14,7 +14,7 @@
      (:jump        :row 5 :frames 1)
      (:jump-mid    :row 6 :frames 1)
      (:jump-fall   :row 7 :frames 1))
-   :origin (gamekit:vec2 (/ 96 2) 0)))
+   :origin (gamekit:vec2 (/ 96 2) (/ 84 2))))
 
 
 (defclass player ()
@@ -24,17 +24,16 @@
 
 (defmethod initialize-instance :after ((this player) &key (position (gamekit:vec2 0 0)) universe)
   (with-slots (body shape) this
-    (let* ((width (gamekit:x *player-size*))
-           (height (gamekit:y *player-size*))
-           (p1 (gamekit:vec2 (- (/ width 2)) 0))
-           (p2 (gamekit:vec2 (/ width 2) 0))
-           (p3 (gamekit:vec2 (/ width 2) height))
-           (p4 (gamekit:vec2 (- (/ width 2)) height)))
-      (setf body (ge.phy:make-rigid-body universe)
-            shape (ge.phy:make-polygon-shape universe (list p1 p2 p3 p4)
-                                             :body body
-                                             :substance this)
-            (ge.phy:body-position body) position))))
+    (setf body (ge.phy:make-rigid-body universe)
+          shape (ge.phy:make-circle-shape universe (/ (gamekit:y *player-size*) 2)
+                                          :body body
+                                          :substance this)
+          ;; (ge.phy:make-box-shape universe
+          ;;                              (gamekit:x *player-size*)
+          ;;                              (gamekit:y *player-size*)
+          ;;                              :body body
+          ;;                              :substance this)
+          (ge.phy:body-position body) position)))
 
 (defun player-position (player)
   (ge.phy:body-position (body player)))
