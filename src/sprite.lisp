@@ -13,19 +13,26 @@
    (height
     :initarg :height
     :documentation "height of an animated frame")
+   (origin
+    :initarg :origin
+    :documentation "origin point")
    (animations
     :initform (make-hash-table))))
 
-(defun make-animated-sprite-resource (image width height animations-spec)
+(defun make-animated-sprite-resource (image width height animations-spec
+                                      &key (origin (gamekit:vec2 0 0)))
   "Create a new ANIMATED-SPRITE-RESOURCE based on the tileset image IMAGE
 where each tile has the size (WIDTH, HEIGHT). ANIMATIONS-SPEC is list of
-named animations. Each list item has the structure
+named animations. ORIGIN marks the origin point of the sprite.
+
+Each list item has the structure
 
    (NAME &key ROW FRAMES SPEED)."
   (let ((this (make-instance 'animated-sprite-resource
                              :image image
                              :width width
-                             :height height)))
+                             :height height
+                             :origin origin)))
     (with-slots (animations) this
       (dolist (item animations-spec)
         (setf (gethash (car item) animations) (cdr item))))
@@ -35,12 +42,14 @@ named animations. Each list item has the structure
   (gethash name (slot-value resource 'animations)))
 
 (defun draw-animated-sprite-resource (resource position animation frame &key mirror-x)
-  (with-slots (image width height) resource
+  (with-slots (image width height origin) resource
     (let* ((row  (getf (animation-spec resource animation) :row))
            (x    (* frame width))
            (y    (* row height)))
-      (gamekit:draw-image position image :origin (gamekit:vec2 x y)
-                                         :width width :height height :mirror-x mirror-x))))
+      (gamekit:draw-image (gamekit:subt position origin)
+                          image
+                          :origin (gamekit:vec2 x y)
+                          :width width :height height :mirror-x mirror-x))))
 
 (defclass animation-state ()
   ((timestamp :initform 0)
@@ -50,7 +59,8 @@ named animations. Each list item has the structure
    image
    y
    width
-   height))
+   height
+   origin))
 
 (defun update-animation-state (state)
   (with-slots (timestamp total-length frametime frame) state
@@ -61,21 +71,24 @@ named animations. Each list item has the structure
   (destructuring-bind
       (&key (row 0) (frames 1) (speed 100))
       (animation-spec resource animation-name)
-    (let* ((state (make-instance 'animation-state))           )
-      (with-slots (total-length image y width height frametime) state
+    (let* ((state (make-instance 'animation-state)))
+      (with-slots (total-length image y width height frametime origin) state
         (setf total-length (* frames speed)
               image (slot-value resource 'image)
               height (slot-value resource 'height)
-              y (* row height)
+              y (* (1+ row) height)
               width (slot-value resource 'width)
-              frametime speed))
+              frametime speed
+              origin (slot-value resource 'origin)))
       (update-animation-state state)
       state)))
 
 (defun draw-animation-state (state position)
-  (with-slots (image width height y frame) state
-    (gamekit:draw-image position image
-                        :origin (gamekit:vec2 (* frame width) y)
+  (with-slots (image width height y frame origin) state
+    (gamekit:draw-image (gamekit:subt position origin)
+                        image
+                        :origin (gamekit:vec2 (* frame width)
+                                              (- (gamekit:image-height image) y))
                         :width width
                         :height height)))
 
@@ -93,3 +106,7 @@ named animations. Each list item has the structure
   (with-slots (state) sprite
     (update-animation-state state)
     (draw-animation-state state position)))
+
+(defun animated-sprite-change-animation (sprite animation-name)
+  (with-slots (state resource) sprite
+    (setf state (make-animation-state resource animation-name))))

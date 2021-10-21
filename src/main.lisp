@@ -18,7 +18,8 @@
 
 (defmethod gamekit:draw ((this jupiter-game))
   (update-elapsed-time)
-  (gamestate-draw (jupiter-gamestate this)))
+  (gamestate-draw (jupiter-gamestate this))
+  (gamekit:draw-text (format nil "Elapsed time: ~a" *elapsed-time*) (gamekit:vec2 0 0)))
 
 (defmethod gamekit:post-initialize ((this jupiter-game))
   (setq *universe* (ge.phy:make-universe :2d :on-pre-solve

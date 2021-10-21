@@ -5,8 +5,6 @@
 
 (defparameter *max-speed* 150)
 
-(defparameter *player-size* (gamekit:vec2 30 80))
-
 (defvar *universe* nil)
 
 (defvar *left-pressed* nil)
