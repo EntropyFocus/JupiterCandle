@@ -3,8 +3,7 @@
 ;;; Elements for collision
 
 (defparameter *level*
-  '((:floor :x 0 :y 0 :width 1000)
-    (:jump-ring :x 300 :y 130)))
+  '((:floor :x 0 :y 0 :width 1000)))
 
 ;; LEVEL-ELEMENT
 

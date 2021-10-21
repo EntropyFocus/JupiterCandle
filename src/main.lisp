@@ -18,8 +18,13 @@
 
 (defmethod gamekit:draw ((this jupiter-game))
   (update-elapsed-time)
-  (gamestate-draw (jupiter-gamestate this))
-  (gamekit:draw-text (format nil "Elapsed time: ~a" *elapsed-time*) (gamekit:vec2 0 0)))
+  (gamekit:draw-text (format nil "Elapsed time: ~a" *elapsed-time*) (gamekit:vec2 0 0))
+  (with-slots (gamestate) this
+    (with-slots (player) gamestate
+      (let ((y-offset (- 150 (gamekit:y (ge.phy:body-position (body player))))))
+        (when (< y-offset 0)
+          (gamekit:translate-canvas 0 y-offset)))))
+  (gamestate-draw (jupiter-gamestate this)))
 
 (defmethod gamekit:post-initialize ((this jupiter-game))
   (setq *universe* (ge.phy:make-universe :2d :on-pre-solve
@@ -30,6 +35,7 @@
   (setf (jupiter-gamestate this) (make-instance 'gamestate))
 
   (setf *last-timestamp* (now))
+  (setf *level-height* 0)
 
   (gamekit:bind-button :up :pressed #'(lambda () (jump (jupiter-gamestate this))))
   (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))
