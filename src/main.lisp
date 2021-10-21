@@ -9,6 +9,12 @@
   )
 
 (defmethod gamekit:draw ((this jupiter-game))
+  (with-slots (gamestate) this
+    (with-slots (player) gamestate
+      (let ((y-offset (- 150 (gamekit:y (ge.phy:body-position (body player))))))
+        (when (< y-offset 0)
+          (gamekit:translate-canvas 0 y-offset)))))
+      
   (gamestate-draw (jupiter-gamestate this)))
 
 (defmethod gamekit:post-initialize ((this jupiter-game))
@@ -18,6 +24,8 @@
                                                                              this-shape that-shape))))
   (setf (ge.phy:gravity *universe*) (gamekit:vec2 0 -400))
   (setf (jupiter-gamestate this) (make-instance 'gamestate))
+
+  (setf *level-height* 0)
 
   (gamekit:bind-button :up :pressed #'(lambda () (jump (jupiter-gamestate this))))
   (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))

@@ -13,8 +13,7 @@
 (defvar *right-pressed* nil)
 (defvar *up-pressed* nil)
 
-(defvar *activated-level-elements* nil
-  "List of activated elements, i.e. that cannot be triggered again by a collision")
+(defvar *level-height* 0)
 
 (defclass gamestate ()
   ((elements
@@ -61,7 +60,8 @@ TODO: replace this with a more generic approach")
 
 (defun gamestate-step (gamestate)
   (update-run gamestate)
-  (update-on-ground gamestate))
+  (update-on-ground gamestate)
+  (update-level gamestate 500))
 
 ;; ----------------
 
@@ -112,3 +112,12 @@ physics engine should apply collision effects."
       (add-timer (+ (now) 2)
                  (lambda () (setf activated nil)))))
   nil)
+
+;; Level update, dass elements to the level based on desired height
+
+(defun update-level (gamestate desired-height)
+  (with-slots (elements) gamestate
+    (when (> desired-height *level-height*)
+      (incf *level-height* 50)
+      (push (make-instance 'jump-ring-element :position (gamekit:vec2 300 *level-height*)) elements))))
+
