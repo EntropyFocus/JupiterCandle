@@ -62,7 +62,7 @@
     (when (> (abs (gamekit:y (player-speed player))) 10)
       (player-remove-state gamestate :on-ground))
     (update-run gamestate)
-    (update-level gamestate (+ 20 (gamekit:y (player-position player))))))
+    (update-level gamestate (+ 500 (gamekit:y (player-position player))))))
 
 ;; ----------------
 
@@ -78,11 +78,10 @@
 
 (defun gamestate-draw (gamestate)
   (with-slots (player elements) gamestate
-    (let ((y-offset (- 150 (gamekit:y (ge.phy:body-position (body player))))))
+    (let ((y-offset (ceiling (min 0 (- 150 (gamekit:y (ge.phy:body-position (body player))))))))
       (draw-background y-offset)
       (gamekit:with-pushed-canvas ()
-        (when (< y-offset 0)
-          (gamekit:translate-canvas 0 y-offset))
+        (gamekit:translate-canvas 0 y-offset)
         (dolist (item elements)
           (render item))
         (render player)))
