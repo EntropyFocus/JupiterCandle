@@ -14,7 +14,7 @@
      (:jump        :row 5 :frames 1)
      (:jump-mid    :row 6 :frames 1)
      (:jump-fall   :row 7 :frames 1))
-   :origin (gamekit:vec2 (/ 96 2) (/ 84 2))))
+   :origin (gamekit:vec2 (/ 96 2) 21)))
 
 
 (defclass player ()
@@ -48,10 +48,11 @@
   (ge.phy:apply-force (body player) (gamekit:mult offset 10000)))
 
 (defmethod render ((this player))
-  (let* ((position (player-position this))
-         (origin (gamekit:subt position *player-origin*)))
+  (let* ((position (player-position this)))
     (gamekit:draw-circle position 5 :fill-paint (gamekit:vec4 1 0 0 1))
-    (gamekit:draw-rect origin (gamekit:x *player-size*) (gamekit:y *player-size*)
+    (gamekit:draw-circle position (/ (gamekit:y *player-size*) 2)
+                         :stroke-paint (gamekit:vec4 1 0 0 1))
+    #++(gamekit:draw-rect origin (gamekit:x *player-size*) (gamekit:y *player-size*)
                        :stroke-paint (gamekit:vec4 1 0 0 1))
     (draw-animated-sprite (slot-value this 'sprite) position)))
 
