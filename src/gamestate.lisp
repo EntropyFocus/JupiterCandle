@@ -76,11 +76,10 @@ TODO: replace this with a more generic approach")
 
 (defun gamestate-draw (gamestate)
   (with-slots (player elements) gamestate
-    (let ((y-offset (- 150 (gamekit:y (ge.phy:body-position (body player))))))
+    (let ((y-offset (ceiling (min 0 (- 150 (gamekit:y (ge.phy:body-position (body player))))))))
       (draw-background y-offset)
       (gamekit:with-pushed-canvas ()
-        (when (< y-offset 0)
-          (gamekit:translate-canvas 0 y-offset))
+        (gamekit:translate-canvas 0 y-offset)
         (dolist (item elements)
           (render item))
         (render player)))))
