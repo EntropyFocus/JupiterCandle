@@ -3,7 +3,8 @@
 ;;; Elements for collision
 
 (defparameter *level*
-  '((:floor :x 0 :y 0 :width 1000)))
+  '((:floor :x 320 :y 10 :width 640)
+    (:floor :x 50 :y 30 :width 30)))
 
 ;; LEVEL-ELEMENT
 
@@ -15,38 +16,53 @@
   (with-slots (body) this
     (ge.phy:body-position body)))
 
-;; Floor element
+(defmethod render :after ((this level-element))
+  (gamekit:draw-circle (element-position this) 5 :fill-paint (gamekit:vec4 1 0 0 1)))
 
-(defclass floor-element (level-element)
-  ((width :initarg :width)))
+;; Boxed collision element
 
-(defmethod initialize-instance :after ((this floor-element) &key position)
-  (with-slots (body width) this
+(defclass boxed-element (level-element)
+  ((width :initarg :width)
+   height))
+
+(defmethod initialize-instance :after ((this boxed-element) &key position &allow-other-keys)
+  (with-slots (body width height) this
     (setf body (ge.phy:make-kinematic-body *universe*))
     (setf (ge.phy:body-position body) position)
-    (ge.phy:make-box-shape *universe* width 20 :offset (gamekit:vec2 (/ width 2) 10)
-                                               :body body :substance this)))
+    (ge.phy:make-box-shape *universe* width height
+                           :body body :substance this)))
+
+(defmethod element-origin ((this boxed-element))
+  (with-slots (width height) this
+    (gamekit:subt (element-position this) (gamekit:vec2 (/ width 2) (/ height 2)))))
+
+(defmethod render :after ((this boxed-element))
+  (with-slots (width height) this
+    (gamekit:draw-rect (element-origin this) width height
+                       :stroke-paint (gamekit:vec4 1 0 0 1))))
+
+;; Floor element
+
+(defclass floor-element (boxed-element)
+  ((height :initform 10)))
 
 (defmethod render ((this floor-element))
-  (with-slots (width) this
-    (gamekit:draw-rect (element-position this) width 20 :fill-paint (gamekit:vec4 1 0 0 1))))
+  (with-slots (width height) this
+    (gamekit:draw-rect (element-origin this) width height
+                       :fill-paint (gamekit:vec4 0.4 0.3 0.8 1))))
 
 ;; Jump Ring
 
-(defclass jump-ring-element (level-element)
-  ((activated :initform nil
+(defclass jump-ring-element (boxed-element)
+  ((width :initform 100)
+   (height :initform 20)
+   (activated :initform nil
               :documentation "T if collision effects have already been applied")))
 
-(defmethod initialize-instance :after ((this jump-ring-element) &key position)
-  (with-slots (body) this
-    (setf body (ge.phy:make-kinematic-body *universe*))
-    (setf (ge.phy:body-position body) position)
-    (ge.phy:make-box-shape *universe* 100 20 :offset (gamekit:vec2 50 10) :body body :substance this)))
-
 (defmethod render ((this jump-ring-element))
-  (with-slots (activated) this
-    (gamekit:draw-circle (element-position this) 5 :fill-paint (gamekit:vec4 1 0 0 1))
-    (gamekit:draw-rect (element-position this) 100 20 :fill-paint (gamekit:vec4 1 (if activated 1 0.5) 0 1))))
+  (with-slots (activated width height) this
+    (gamekit:draw-rect (element-origin this) width height
+                       :fill-paint (gamekit:vec4 1 (if activated 1 0.5) 0 1))))
 
 ;; Level initialization
 

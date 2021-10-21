@@ -24,15 +24,16 @@
 
 (defmethod initialize-instance :after ((this player) &key (position (gamekit:vec2 0 0)) universe)
   (with-slots (body shape) this
-    (let ((width (gamekit:x *player-size*))
-          (height (gamekit:y *player-size*)))
+    (let* ((width (gamekit:x *player-size*))
+           (height (gamekit:y *player-size*))
+           (p1 (gamekit:vec2 (- (/ width 2)) 0))
+           (p2 (gamekit:vec2 (/ width 2) 0))
+           (p3 (gamekit:vec2 (/ width 2) height))
+           (p4 (gamekit:vec2 (- (/ width 2)) height)))
       (setf body (ge.phy:make-rigid-body universe)
-            shape (ge.phy:make-box-shape universe
-                                         width
-                                         height
-                                         :body body
-                                         :substance this
-                                         :offset (gamekit:vec2 0 (/ height 2)))
+            shape (ge.phy:make-polygon-shape universe (list p1 p2 p3 p4)
+                                             :body body
+                                             :substance this)
             (ge.phy:body-position body) position))))
 
 (defun player-position (player)
