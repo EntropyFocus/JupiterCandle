@@ -13,7 +13,8 @@
      (:run         :row 3 :frames 8 :speed 100)
      (:jump        :row 5 :frames 1)
      (:jump-mid    :row 6 :frames 1)
-     (:jump-fall   :row 7 :frames 1))
+     (:jump-fall   :row 7 :frames 1)
+     (:hit-ground  :row 8 :frames 2))
    :origin (gamekit:vec2 (/ 96 2) 21)))
 
 

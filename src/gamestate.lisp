@@ -83,7 +83,7 @@
         (progn
           (player-remove-state gamestate :run)
           (when (< vy 0)
-            (if (< (abs vx) 40
+            (if (< (abs vx) 40)
                 (player-change-animation gamestate :jump-mid)
                 (player-change-animation gamestate :jump-fall))))))))
 
