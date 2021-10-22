@@ -15,6 +15,9 @@
   ((elements
     :initform (init-level-elements)
     :documentation "List of level elements the player can interact with")
+   (level-height
+    :initform 0
+    :documentation "Y position of the highest generated level element")
    (player :initform (make-instance 'player :universe *universe*
                                             :position (gamekit:vec2 100 200)))
    (states :initform nil)
@@ -25,12 +28,18 @@
 
 (defun reinitialize-level (gamestate)
   "Remove all level elements and repopulate the level with (init-level-elements)"
-  (with-slots (elements) gamestate
+  (with-slots (elements level-height) gamestate
     (dolist (item elements)
       (destroy-element item))
     (setf elements (init-level-elements))
-    (setf *level-height* 0)
-    (update-level gamestate *level-height*)))
+    (setf level-height 0)
+    (update-level gamestate 0)))
+
+(defun update-level (gamestate desired-height)
+  "Generate level elements at DESIRED-HEIGHT."
+  (with-slots (level-height) gamestate
+    (loop while (< level-height desired-height) do
+          (setf level-height (generate-level-section gamestate level-height 'random)))))
 
 (defun player-has-state (gamestate state)
   (member state (slot-value gamestate 'states)))

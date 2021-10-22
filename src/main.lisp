@@ -30,7 +30,6 @@
   (setf (jupiter-gamestate this) (make-instance 'gamestate))
 
   (setf *last-timestamp* (now))
-  (setf *level-height* 0)
 
   (gamekit:bind-button :up :pressed #'(lambda () (jump (jupiter-gamestate this))))
   (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))

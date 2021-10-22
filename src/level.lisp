@@ -28,17 +28,18 @@ X and Y specify the position within the level section."
                     :position (gamekit:vec2 x (+ level-height y)) :width width))))
 
 (defun generate-level-section (gamestate level-height generator-name)
+  "Generate level elements in GAMESTATE at LEVEL-HEIGHT using the level section
+generator GENERATOR-NAME. Returns the y position of the highest generated element."
   (let* ((generator (gethash generator-name *section-generators*))
-         (specs (funcall generator)))
+         (specs (funcall generator))
+         (max-y 0))
     (with-slots (elements) gamestate
-      (dolist (spec specs)
-        (push (make-element level-height spec) elements)))))
-
-(defvar *level-height* 0)
-
-(defun update-level (gamestate desired-height)
-  "Generate level elements up to DESIRED-HEIGHT. To be done."
-  ())
+      (loop for spec in specs
+            when spec
+            do
+            (setf max-y (max max-y (getf (cdr spec) :y)))
+            (push (make-element level-height spec) elements)))
+    (+ level-height max-y)))
 
 ;; -------------------------------------------------
 
@@ -55,7 +56,7 @@ X and Y specify the position within the level section."
 
 (defun init-level-elements ()
   (let ((result nil))
-    (loop :for name in '(static random)
+    (loop :for name in '(static)
           :for generator = (gethash name *section-generators*)
           :for specs = (funcall generator)
           :do (loop for spec in specs
