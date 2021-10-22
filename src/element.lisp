@@ -1,11 +1,5 @@
 (in-package :jupiter-candle)
 
-;;; Elements for collision
-
-(defparameter *level*
-  '((:floor :x 320 :y 10 :width 640)
-    (:floor :x 50 :y 30 :width 30)))
-
 ;; LEVEL-ELEMENT
 
 (defclass level-element ()
@@ -72,16 +66,4 @@
   (with-slots (activated width height) this
     (gamekit:draw-rect (element-origin this) width height
                        :fill-paint (gamekit:vec4 1 (if activated 1 0.5) 0 1))))
-
-;; Level initialization
-
-(defun init-level-elements ()
-  (loop :for item in *level* :collect
-        (alexandria:destructuring-ecase item
-          ((:jump-ring &key (x 0) (y 0))
-           (make-instance 'jump-ring-element
-                          :position (gamekit:vec2 x y)))
-          ((:floor &key (x 0) (y 0) (width 10))
-           (make-instance 'floor-element
-                          :position (gamekit:vec2 x y) :width width)))))
 

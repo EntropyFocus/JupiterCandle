@@ -11,8 +11,6 @@
 (defvar *right-pressed* nil)
 (defvar *up-pressed* nil)
 
-(defvar *level-height* 0)
-
 (defclass gamestate ()
   ((elements
     :initform (init-level-elements)
@@ -166,30 +164,4 @@ physics engine should apply collision effects."
       (add-timer (+ (now) 2)
                  (lambda () (setf activated nil)))))
   nil)
-
-;; Level update, dass elements to the level based on desired height
-
-(defparameter *1-object-1-in* 1.2)
-(defparameter *2-object-1-in* 1.2)
-(defparameter *platform-1-in* 1.7)
-(defparameter *portal-1-in* 1.2)
-
-(defun place-object (gamestate)
-  (with-slots (elements) gamestate
-    (if (< (random *platform-1-in*) 1)
-        (progn
-          (push (make-instance 'floor-element :position (gamekit:vec2 (random 900) *level-height*) :width 100) elements))
-        (progn
-          (when (< (random *portal-1-in*) 1)
-            (push (make-instance 'jump-ring-element :position (gamekit:vec2 (random 900) *level-height*)) elements))))
-    ))
-
-(defun update-level (gamestate desired-height)
-  (with-slots (elements) gamestate
-    (loop while (> desired-height *level-height*) do
-      (incf *level-height* 50)
-      (when (< (random *1-object-1-in*) 1)
-        (place-object gamestate)
-        (when (< (random *2-object-1-in*) 1)
-          (place-object gamestate))))))
 
