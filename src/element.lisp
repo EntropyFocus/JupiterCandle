@@ -19,18 +19,27 @@
 (defmethod render :after ((this level-element))
   (gamekit:draw-circle (element-position this) 5 :fill-paint (gamekit:vec4 1 0 0 1)))
 
+(defmethod destroy-element ((this level-element))
+  (with-slots (body) this
+    (ge.ng:dispose body)))
+
 ;; Boxed collision element
 
 (defclass boxed-element (level-element)
   ((width :initarg :width)
-   height))
+   height
+   shape))
 
 (defmethod initialize-instance :after ((this boxed-element) &key position &allow-other-keys)
-  (with-slots (body width height) this
+  (with-slots (body width height shape) this
     (setf body (ge.phy:make-kinematic-body *universe*))
     (setf (ge.phy:body-position body) position)
-    (ge.phy:make-box-shape *universe* width height
-                           :body body :substance this)))
+    (setf shape (ge.phy:make-box-shape *universe* width height
+                                       :body body :substance this))))
+
+(defmethod destroy-element :after ((this boxed-element))
+  (with-slots (shape) this
+    (ge.ng:dispose shape)))
 
 (defmethod element-origin ((this boxed-element))
   (with-slots (width height) this

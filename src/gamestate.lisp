@@ -25,6 +25,14 @@
 
 ;;-----------------
 
+(defun reinitialize-level (gamestate)
+  "Remove all level elements and repopulate the level with (init-level-elements)"
+  (with-slots (elements) gamestate
+    (dolist (item elements)
+      (destroy-element item))
+    (setf elements (init-level-elements))
+    (update-level gamestate *level-height*)))
+
 (defun player-has-state (gamestate state)
   (member state (slot-value gamestate 'states)))
 
