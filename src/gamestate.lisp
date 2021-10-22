@@ -41,9 +41,11 @@
 (defun update-level (gamestate desired-height)
   "Generate level elements at DESIRED-HEIGHT."
   (with-slots (level-height) gamestate
-    (loop while (< level-height desired-height) do
-          (setf level-height (generate-level-section gamestate level-height
-                                                     (random-generator-name))))))
+    (let ((generator (if (and (= level-height 0) *first-generator*)
+                         *first-generator* (random-generator-name))))
+      (loop while (< level-height desired-height) do
+            (setf level-height (generate-level-section gamestate level-height
+                                                       generator))))))
 
 (defun player-has-state (gamestate state)
   (member state (slot-value gamestate 'states)))
