@@ -1,8 +1,12 @@
 (in-package :jupiter-candle)
 
-;; Code from https://gitlab.com/decent-username/dmomd/-/blob/master/src/timer-utils.lisp
+;; Code adapted
+;; from https://gitlab.com/decent-username/dmomd/-/blob/master/src/timer-utils.lisp
 
-(defvar *timers* nil)
+(defstruct timerset
+  (timers))
+
+(defvar *default-timerset* (make-timerset))
 
 ;;;; Timers
 ;;;;----------------------------------------------------------------------------
@@ -25,17 +29,21 @@ Doesn't modify the original `timers' list."
                 (insert-timer timer (rest timers))))))
 
 
-(defun add-timer (target handler)
-  (setf *timers* (insert-timer (cons target handler) *timers*)))
+(defun add-timer (target handler &optional (timerset *default-timerset*))
+  (setf (timerset-timers timerset) (insert-timer (cons target handler)
+                                                 (timerset-timers timerset))))
 
+(defun cancel-timers (&optional (timerset *default-timerset*))
+  "Clear remaining timers without executing them"
+  (setf (timerset-timers timerset) nil))
 
-(defun process-timers ()
-  ;; this does not take advantage of *timers* being sorted.  For robustness. :D
+(defun process-timers (&optional (timerset *default-timerset*))
+  ;; this does not take advantage of *default-timerset* being sorted.  For robustness. :D
   (let ((expired (find-if (lambda (timer)
                             (>= (now)
                                 (car timer)))
-                          *timers*)))
+                          (timerset-timers timerset))))
     (when expired
       (funcall (cdr expired))
-      (setf *timers* (delete expired *timers*))
-      (process-timers))))
+      (setf (timerset-timers timerset) (delete expired (timerset-timers timerset)))
+      (process-timers timerset))))

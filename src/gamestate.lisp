@@ -37,8 +37,11 @@
         t)))
 
 (defun player-remove-state (gamestate state)
-  (with-slots (states) gamestate
-    (setf states (delete state states))))
+  "Remove STATE from the current set of states. Return T if state has been removed."
+  (when (player-has-state gamestate state)
+    (with-slots (states) gamestate
+      (setf states (delete state states)))
+    t))
 
 (defun player-change-animation (gamestate animation)
   (with-slots (player) gamestate
@@ -76,10 +79,10 @@
       (if (player-has-state gamestate :on-ground)
         (if (> (abs vx) 5)
           (when (player-push-state gamestate :run)
-            (player-change-animation gamestate :run))
+            (player-change-animation gamestate :idle-to-run))
           (progn
-            (player-remove-state gamestate :run)
-            (player-change-animation gamestate :idle)))
+            (when (player-remove-state gamestate :run)
+              (player-change-animation gamestate :idle))))
         (progn
           (player-remove-state gamestate :run)
           (when (< vy 0)
@@ -137,7 +140,8 @@ physics engine should apply collision effects."
 
 (defmethod handle-element-pre-collision ((element floor-element) gamestate)
   (when (not (player-has-state gamestate :jumped-recently))
-    (player-push-state gamestate :on-ground))
+    (when (player-push-state gamestate :on-ground)
+      (player-change-animation gamestate :hit-ground)))
   (setf (ge.phy:collision-friction)         1.0)
   (setf (ge.phy:collision-elasticity)       0.0)
   t)
