@@ -53,65 +53,67 @@ Each list item has the structure
 
 (defclass animation-state ()
   ((timestamp :initform 0)
-   frametime
-   total-length
-   frame
-   image
-   y
-   width
-   height
-   origin))
+   (resource :initarg :resource) 
+   (frametime :initarg :frametime)
+   (total-length :initarg :total-length)
+   (frame :initform 0)
+   (y :initarg :y)))
 
 (defun update-animation-state (state)
   (with-slots (timestamp total-length frametime frame) state
     (setf timestamp (mod (+ timestamp *elapsed-time*) total-length)
           frame     (floor timestamp frametime))))
 
-(defun make-animation-state (resource animation-name)
-  (destructuring-bind
-      (&key (row 0) (frames 1) (speed 100))
-      (animation-spec resource animation-name)
-    (let* ((state (make-instance 'animation-state)))
-      (with-slots (total-length image y width height frametime origin) state
-        (setf total-length (* frames speed)
-              image (slot-value resource 'image)
-              height (slot-value resource 'height)
-              y (* (1+ row) height)
-              width (slot-value resource 'width)
-              frametime speed
-              origin (slot-value resource 'origin)))
-      (update-animation-state state)
-      state)))
+(defun make-animation-state (resource row frames speed)
+  (let ((state (make-instance 'animation-state
+                              :resource resource
+                              :frametime speed
+                              :total-length (* frames speed)
+                              :y (* (1+ row) (slot-value resource 'height)))))
+    (update-animation-state state)
+    state))
 
 (defun draw-animation-state (state position &key mirror-x)
-  (with-slots (image width height y frame origin) state
-    (ge.vg:with-retained-canvas
-      (ge.vg:translate-canvas (gamekit:x position) (gamekit:y position))
-      (when mirror-x
-        (ge.vg:scale-canvas -1 1))
-      (ge.vg:translate-canvas (- (gamekit:x origin)) (- (gamekit:y origin)))
-      (gamekit:draw-image (gamekit:vec2 0 0)
-                          image
-                          :origin (gamekit:vec2 (* frame width)
-                                                (- (gamekit:image-height image) y))
-                          :width width
-                          :height height))))
+  (with-slots (resource y frame) state
+    (with-slots (image width height origin) resource
+      (ge.vg:with-retained-canvas
+        (ge.vg:translate-canvas (gamekit:x position) (gamekit:y position))
+        (when mirror-x
+          (ge.vg:scale-canvas -1 1))
+        (ge.vg:translate-canvas (- (gamekit:x origin)) (- (gamekit:y origin)))
+        (gamekit:draw-image (gamekit:vec2 0 0)
+                            image
+                            :origin (gamekit:vec2 (* frame width)
+                                                  (- (gamekit:image-height image) y))
+                            :width width
+                            :height height)))))
 
 (defclass animated-sprite ()
   ((resource :initarg :resource)
-   (state :initarg :state
-          :documentation "current animation state")))
+   (state :documentation "current animation state")
+   (timers :initform (make-timerset))))
 
 (defun make-animated-sprite (resource initial-state)
-  (make-instance 'animated-sprite
-                 :resource resource
-                 :state (make-animation-state resource initial-state)))
+  (let ((sprite (make-instance 'animated-sprite :resource resource)))
+    (animated-sprite-change-animation sprite initial-state)
+    sprite))
 
 (defun draw-animated-sprite (sprite position &key mirror-x)
-  (with-slots (state) sprite
+  (with-slots (state timers) sprite
+    (process-timers timers)
     (update-animation-state state)
     (draw-animation-state state position :mirror-x mirror-x)))
 
 (defun animated-sprite-change-animation (sprite animation-name)
-  (with-slots (state resource) sprite
-    (setf state (make-animation-state resource animation-name))))
+  (with-slots (state resource timers) sprite
+    (cancel-timers timers)
+    (destructuring-bind
+        (&key (row 0) (frames 1) (speed 100) next)
+        (animation-spec resource animation-name)
+      (setf state (make-animation-state resource row frames speed))
+      (when next
+        (log:info (+ (now) (/ (slot-value state 'total-length) 1000)))
+        (add-timer (+ (now) (/ (slot-value state 'total-length) 1000))
+                   (lambda ()
+                     (animated-sprite-change-animation sprite next))
+                   timers)))))

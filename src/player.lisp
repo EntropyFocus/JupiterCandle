@@ -9,12 +9,12 @@
   (make-animated-sprite-resource
    'player-anim 96 84
    '((:idle        :row 1 :frames 7 :speed 100)
-     (:idle-to-run :row 2 :frames 2 :speed 100)
+     (:idle-to-run :row 2 :frames 2 :speed 100 :next :run)
      (:run         :row 3 :frames 8 :speed 100)
      (:jump        :row 5 :frames 1)
      (:jump-mid    :row 6 :frames 1)
      (:jump-fall   :row 7 :frames 1)
-     (:hit-ground  :row 8 :frames 2))
+     (:hit-ground  :row 8 :frames 2 :speed 300 :next :idle))
    :origin (gamekit:vec2 (/ 96 2) 21)))
 
 

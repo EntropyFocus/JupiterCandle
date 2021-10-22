@@ -36,7 +36,11 @@
   (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))
   (gamekit:bind-button :left :released (lambda () (setf *left-pressed* nil)))
   (gamekit:bind-button :right :pressed (lambda () (setf *right-pressed* t)))
-  (gamekit:bind-button :right :released (lambda () (setf *right-pressed* nil))))
+  (gamekit:bind-button :right :released (lambda () (setf *right-pressed* nil)))
+
+  (gamekit:bind-button :R :pressed
+                       (lambda ()
+                         (reinitialize-level (jupiter-gamestate this)))))
 
 (defmethod gamekit:act ((this jupiter-game))
   (process-timers)
