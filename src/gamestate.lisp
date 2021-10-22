@@ -131,9 +131,11 @@ should be applied."))
 physics engine should apply collision effects."
   (with-slots (player) gamestate
     (let* ((this-sub (ge.phy:shape-substance this-shape))
-           (that-sub (ge.phy:shape-substance that-shape))
-           (element (if (eq this-sub player) that-sub this-sub)))
-      (handle-element-pre-collision element gamestate))))
+           (that-sub (ge.phy:shape-substance that-shape)))
+      (if (eq this-sub player)
+          (handle-element-pre-collision that-sub gamestate)
+          (when (eq that-sub player)
+            (handle-element-pre-collision this-sub gamestate))))))
 
 (defmethod handle-element-pre-collision ((element floor-element) gamestate)
   (when (not (player-has-state gamestate :jumped-recently))
@@ -154,29 +156,27 @@ physics engine should apply collision effects."
 
 ;; Level update, dass elements to the level based on desired height
 
-(defparameter *1-object-1-in* 2)
-(defparameter *2-object-1-in* 3)
-(defparameter *platform-1-in* 2)
-(defparameter *portal-1-in* 2)
+(defparameter *1-object-1-in* 1.2)
+(defparameter *2-object-1-in* 1.2)
+(defparameter *platform-1-in* 1.7)
+(defparameter *portal-1-in* 1.2)
 
 (defun place-object (gamestate)
   (with-slots (elements) gamestate
-    (if (= 0 (random *platform-1-in*))
+    (if (< (random *platform-1-in*) 1)
         (progn
           (push (make-instance 'floor-element :position (gamekit:vec2 (random 900) *level-height*) :width 100) elements))
         (progn
-          (when (= 0 (random *portal-1-in*))
+          (when (< (random *portal-1-in*) 1)
             (push (make-instance 'jump-ring-element :position (gamekit:vec2 (random 900) *level-height*)) elements))))
-    )) 
+    ))
 
 (defun update-level (gamestate desired-height)
   (with-slots (elements) gamestate
-    (when (> desired-height *level-height*)
+    (loop while (> desired-height *level-height*) do
       (incf *level-height* 50)
-      (if (= 0 (random *1-object-1-in*))
-          (place-object gamestate)
-          (progn
-            (when (= 0 (random *2-object-1-in*))
-              (place-object gamestate)
-              #++(place-object gamestate)))))))
+      (when (< (random *1-object-1-in*) 1)
+        (place-object gamestate)
+        (when (< (random *2-object-1-in*) 1)
+          (place-object gamestate))))))
 
