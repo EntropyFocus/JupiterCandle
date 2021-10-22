@@ -31,6 +31,7 @@
     (dolist (item elements)
       (destroy-element item))
     (setf elements (init-level-elements))
+    (setf *level-height* 0)
     (update-level gamestate *level-height*)))
 
 (defun player-has-state (gamestate state)

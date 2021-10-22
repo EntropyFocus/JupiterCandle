@@ -112,7 +112,6 @@ Each list item has the structure
         (animation-spec resource animation-name)
       (setf state (make-animation-state resource row frames speed))
       (when next
-        (log:info (+ (now) (/ (slot-value state 'total-length) 1000)))
         (add-timer (+ (now) (/ (slot-value state 'total-length) 1000))
                    (lambda ()
                      (animated-sprite-change-animation sprite next))
