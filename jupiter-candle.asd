@@ -13,6 +13,7 @@
                  (:file "player")
                  (:file "level")
                  (:file "level_1")
+                 (:file "level_2")
                  (:file "gamestate")
                  (:file "main")
                  (:file "ui"))))

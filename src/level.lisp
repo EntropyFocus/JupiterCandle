@@ -20,7 +20,7 @@ X and Y specify the position within the level section."
 
 (defun make-element (level-height spec)
   (alexandria:destructuring-ecase spec
-    ((:jump-ring &key (x 0) (y 0))
+    ((:jump-ring &key (x 0) (y 0) &allow-other-keys)
      (make-instance 'jump-ring-element
                     :position (gamekit:vec2 x (+ level-height y))))
     ((:floor &key (x 0) (y 0) (width 10))
@@ -41,6 +41,13 @@ generator GENERATOR-NAME. Returns the y position of the highest generated elemen
             (push (make-element level-height spec) elements)))
     (+ level-height max-y)))
 
+(defun random-generator-name ()
+  (let ((idx (random (hash-table-count *section-generators*))))
+    (loop for key being the hash-keys of *section-generators*
+          for x from 0
+          when (= x idx)
+          return key)))
+
 ;; -------------------------------------------------
 
 (defparameter *static-level*
@@ -51,15 +58,6 @@ generator GENERATOR-NAME. Returns the y position of the highest generated elemen
     (:floor :x 340 :y 190 :width  40)
     (:floor :x 50 :y 30 :width 30)))
 
-(define-level-section-generator static ()
-  *static-level*)
-
 (defun init-level-elements ()
-  (let ((result nil))
-    (loop :for name in '(static)
-          :for generator = (gethash name *section-generators*)
-          :for specs = (funcall generator)
-          :do (loop for spec in specs
-                    when spec
-                    do (push (make-element 0 spec) result)))
-    result))
+  (loop for spec in *static-level*
+        collect (make-element 0 spec)))

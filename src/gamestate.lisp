@@ -11,6 +11,9 @@
 (defvar *right-pressed* nil)
 (defvar *up-pressed* nil)
 
+(defparameter *first-generator* 'random
+  "Specifies the first generator applied at the ground level section.")
+
 (defclass gamestate ()
   ((elements
     :initform (init-level-elements)
@@ -39,7 +42,8 @@
   "Generate level elements at DESIRED-HEIGHT."
   (with-slots (level-height) gamestate
     (loop while (< level-height desired-height) do
-          (setf level-height (generate-level-section gamestate level-height 'random)))))
+          (setf level-height (generate-level-section gamestate level-height
+                                                     (random-generator-name))))))
 
 (defun player-has-state (gamestate state)
   (member state (slot-value gamestate 'states)))
@@ -140,13 +144,17 @@
 
 (defun gamestate-draw (gamestate)
   (with-slots (player elements states level-height) gamestate
-    (let ((y-offset (ceiling (min 0 (- 150 (gamekit:y (ge.phy:body-position (body player))))))))
-      (draw-background y-offset)
-      (gamekit:with-pushed-canvas ()
-        (gamekit:translate-canvas 0 y-offset)
-        (dolist (item elements)
-          (render item))
-        (render player)))
+    (gamekit:with-pushed-canvas ()
+      (let* ((y-speed        (gamekit:y (player-speed player)))
+             (staunch-factor (exp (- (/ (abs y-speed) 10000)))))
+        (ge.vg:scale-canvas 1 staunch-factor))
+      (let ((y-offset (ceiling (min 0 (- 150 (gamekit:y (ge.phy:body-position (body player))))))))
+        (draw-background y-offset)
+        (gamekit:with-pushed-canvas ()
+          (gamekit:translate-canvas 0 y-offset)
+          (dolist (item elements)
+            (render item))
+          (render player))))
     (gamekit:draw-text (format nil "Player State: ~a" states)
                        (gamekit:vec2 0 460) :fill-color (gamekit:vec4 1 1 1 1))
     (gamekit:draw-text (format nil "Highest Element Y: ~a" level-height)
