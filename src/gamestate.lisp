@@ -126,7 +126,7 @@
 ;;-----------------
 
 (defun gamestate-draw (gamestate)
-  (with-slots (player elements) gamestate
+  (with-slots (player elements states level-height) gamestate
     (let ((y-offset (ceiling (min 0 (- 150 (gamekit:y (ge.phy:body-position (body player))))))))
       (draw-background y-offset)
       (gamekit:with-pushed-canvas ()
@@ -134,8 +134,10 @@
         (dolist (item elements)
           (render item))
         (render player)))
-    (gamekit:draw-text (format nil "Player State: ~a" (slot-value gamestate 'states))
-                       (gamekit:vec2 0 460) :fill-color (gamekit:vec4 1 1 1 1))))
+    (gamekit:draw-text (format nil "Player State: ~a" states)
+                       (gamekit:vec2 0 460) :fill-color (gamekit:vec4 1 1 1 1))
+    (gamekit:draw-text (format nil "Highest Element Y: ~a" level-height)
+                       (gamekit:vec2 0 440) :fill-color (gamekit:vec4 1 1 1 1))))
 
 
 ;;; COLLISION HANDLING
