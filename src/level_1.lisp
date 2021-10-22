@@ -13,7 +13,7 @@
       (when (< (random *portal-1-in*) 1)
         (list :jump-ring :x (random 900) :y level-height))))
 
-(define-level-section-generator random-level ()
+(define-level-section-generator random ()
   (let ((result nil))
     (loop for level-height from 50 below 1000 by 50
           do (when (< (random *1-object-1-in*) 1)
