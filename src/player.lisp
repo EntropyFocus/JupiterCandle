@@ -20,6 +20,9 @@
 (defclass player ()
   ((body :reader body)
    shape
+   (left-oriented :initform nil
+                  :accessor player-left-oriented
+                  :documentation "player looks to the left side")
    (sprite :initform (make-animated-sprite *player-animations* :idle))))
 
 (defmethod initialize-instance :after ((this player) &key (position (gamekit:vec2 0 0)) universe)
@@ -47,6 +50,7 @@
     (gamekit:draw-circle position 5 :fill-paint (gamekit:vec4 1 0 0 1))
     (gamekit:draw-circle position (/ (gamekit:y *player-size*) 2)
                          :stroke-paint (gamekit:vec4 1 0 0 1))
-    (draw-animated-sprite (slot-value this 'sprite) position)))
+    (draw-animated-sprite (slot-value this 'sprite) position
+                          :mirror-x (slot-value this 'left-oriented))))
 
 

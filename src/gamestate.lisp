@@ -25,26 +25,41 @@
 
 ;;-----------------
 
+(defun player-has-state (gamestate state)
+  (member state (slot-value gamestate 'states)))
+
 (defun player-push-state (gamestate state)
-  (pushnew state (slot-value gamestate 'states)))
+  "Add STATE to the current set of states. Return T if state has been added."
+  (if (player-has-state gamestate state)
+      nil
+      (progn
+        (pushnew state (slot-value gamestate 'states))
+        t)))
 
 (defun player-remove-state (gamestate state)
   (with-slots (states) gamestate
     (setf states (delete state states))))
 
-(defun player-has-state (gamestate state)
-  (member state (slot-value gamestate 'states)))
+(defun player-change-animation (gamestate animation)
+  (with-slots (player) gamestate
+    (with-slots (sprite) player
+      (animated-sprite-change-animation sprite animation))))
 
 (defun update-run (gamestate)
   (with-slots (desired-run-state player) gamestate
     (if (and *left-pressed* (not *right-pressed*))
-        (setf desired-run-state -1)
+        (progn
+          (setf desired-run-state -1)
+          (setf (player-left-oriented player) t))
         (if (and *right-pressed* (not *left-pressed*))
-            (setf desired-run-state 1)
+            (progn
+              (setf desired-run-state 1)
+              (setf (player-left-oriented player) nil))
             (setf desired-run-state 0)))
   
     (let ((desired-vx (* desired-run-state *max-speed*))
           (vx (gamekit:x (player-speed player)))
+          (vy (gamekit:y (player-speed player)))
           (delta-vx (if (player-has-state gamestate :on-ground) 1 0.2)))
       (when (< (abs (- vx desired-vx)) 20)
         (setf delta-vx (/ delta-vx 10)))
@@ -55,12 +70,25 @@
       (when (< vx desired-vx)
         (move-player player (gamekit:vec2 delta-vx 0)))
       (when (> vx desired-vx)
-        (move-player player (gamekit:vec2 (- delta-vx) 0))))))
+        (move-player player (gamekit:vec2 (- delta-vx) 0)))
+      (when (> (abs vy) 10)
+        (player-remove-state gamestate :on-ground))
+      (if (player-has-state gamestate :on-ground)
+        (if (> (abs vx) 5)
+          (when (player-push-state gamestate :run)
+            (player-change-animation gamestate :run))
+          (progn
+            (player-remove-state gamestate :run)
+            (player-change-animation gamestate :idle)))
+        (progn
+          (player-remove-state gamestate :run)
+          (when (< vy 0)
+            (if (< (abs vx) 40
+                (player-change-animation gamestate :jump-mid)
+                (player-change-animation gamestate :jump-fall))))))))
 
 (defun gamestate-step (gamestate)
   (with-slots (player) gamestate
-    (when (> (abs (gamekit:y (player-speed player))) 10)
-      (player-remove-state gamestate :on-ground))
     (update-run gamestate)
     (update-level gamestate (+ 500 (gamekit:y (player-position player))))))
 
@@ -70,8 +98,10 @@
   (with-slots (player) gamestate
     (when (player-has-state gamestate :on-ground)
       (player-remove-state gamestate :on-ground)
-      (player-push-state gamestate :jumped-recently)
-      (add-timer (+ (now) 0.3) (lambda () (player-remove-state gamestate :jumped-recently)))
+      (when (player-push-state gamestate :jumped-recently)
+        (player-change-animation gamestate :jump)
+        (add-timer (+ (now) 0.3)
+                   (lambda () (player-remove-state gamestate :jumped-recently))))
       (move-player player (gamekit:vec2 0 20)))))
 
 ;;-----------------

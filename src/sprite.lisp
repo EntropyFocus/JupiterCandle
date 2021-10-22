@@ -83,14 +83,19 @@ Each list item has the structure
       (update-animation-state state)
       state)))
 
-(defun draw-animation-state (state position)
+(defun draw-animation-state (state position &key mirror-x)
   (with-slots (image width height y frame origin) state
-    (gamekit:draw-image (gamekit:subt position origin)
-                        image
-                        :origin (gamekit:vec2 (* frame width)
-                                              (- (gamekit:image-height image) y))
-                        :width width
-                        :height height)))
+    (ge.vg:with-retained-canvas
+      (ge.vg:translate-canvas (gamekit:x position) (gamekit:y position))
+      (when mirror-x
+        (ge.vg:scale-canvas -1 1))
+      (ge.vg:translate-canvas (- (gamekit:x origin)) (- (gamekit:y origin)))
+      (gamekit:draw-image (gamekit:vec2 0 0)
+                          image
+                          :origin (gamekit:vec2 (* frame width)
+                                                (- (gamekit:image-height image) y))
+                          :width width
+                          :height height))))
 
 (defclass animated-sprite ()
   ((resource :initarg :resource)
@@ -102,10 +107,10 @@ Each list item has the structure
                  :resource resource
                  :state (make-animation-state resource initial-state)))
 
-(defun draw-animated-sprite (sprite position)
+(defun draw-animated-sprite (sprite position &key mirror-x)
   (with-slots (state) sprite
     (update-animation-state state)
-    (draw-animation-state state position)))
+    (draw-animation-state state position :mirror-x mirror-x)))
 
 (defun animated-sprite-change-animation (sprite animation-name)
   (with-slots (state resource) sprite
