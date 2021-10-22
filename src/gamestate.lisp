@@ -107,11 +107,16 @@
                 (player-change-animation gamestate :jump-fall))))))))
 
 (defun constrain-player-position (player)
-  (let ((position (player-position player)))
+  (let ((position (player-position player))
+        (velocity (ge.phy:body-linear-velocity (body player))))
     (when (< (gamekit:x position) 0)
-      (setf (player-position player) (gamekit:vec2 0 (gamekit:y position))))
-    (when (> (gamekit:x position) 640)
-      (setf (player-position player) (gamekit:vec2 640 (gamekit:y position))))))
+      (setf (player-position player) (gamekit:vec2 0 (gamekit:y position)))
+      (when (< (gamekit:x velocity) 0)
+        (setf (ge.phy:body-linear-velocity (body player)) (gamekit:vec2 0 (gamekit:y velocity)))))
+    (when (>= (gamekit:x position) 640)
+      (setf (player-position player) (gamekit:vec2 639 (gamekit:y position)))
+      (when (> (gamekit:x velocity) 0)
+        (setf (ge.phy:body-linear-velocity (body player)) (gamekit:vec2 0 (gamekit:y velocity)))))))
 
 (defun gamestate-step (gamestate)
   (with-slots (player) gamestate
