@@ -26,7 +26,7 @@
                                          #'(lambda (this-shape that-shape)
                                              (gamestate-handle-pre-collision (jupiter-gamestate this)
                                                                              this-shape that-shape))))
-  (setf (ge.phy:gravity *universe*) (gamekit:vec2 0 -400))
+  (setf (ge.phy:gravity *universe*) (gamekit:vec2 0 *gravity*))
   (setf (jupiter-gamestate this) (make-instance 'gamestate))
 
   (setf *last-timestamp* (now))

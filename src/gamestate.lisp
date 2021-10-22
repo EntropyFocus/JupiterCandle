@@ -3,6 +3,9 @@
 (defparameter *universe-step* 0.014)
 (defparameter *step-split* 10)
 
+(defparameter *gravity* -800)
+(defparameter *jump-force* 35)
+
 (defparameter *max-speed* 150)
 
 (defvar *universe* nil)
@@ -140,27 +143,31 @@
         (player-change-animation gamestate :jump)
         (add-timer (+ (now) 0.3)
                    (lambda () (player-remove-state gamestate :jumped-recently))))
-      (move-player player (gamekit:vec2 0 20)))))
+      (move-player player (gamekit:vec2 0 *jump-force*)))))
 
 ;;-----------------
 
 (defun gamestate-draw (gamestate)
   (with-slots (player elements states level-height) gamestate
-    (gamekit:with-pushed-canvas ()
-      (let* ((y-speed        (gamekit:y (player-speed player)))
-             (staunch-factor (exp (- (/ (abs y-speed) 10000)))))
-        (ge.vg:scale-canvas 1 staunch-factor))
-      (let ((y-offset (ceiling (min 0 (- 150 (gamekit:y (ge.phy:body-position (body player))))))))
-        (draw-background y-offset)
-        (gamekit:with-pushed-canvas ()
-          (gamekit:translate-canvas 0 y-offset)
-          (dolist (item elements)
-            (render item))
-          (render player))))
+    (let* ((y-speed        (gamekit:y (player-speed player)))
+           (staunch-factor (exp (- (/ (abs (max 0 (- y-speed 500))) 7000)))))
+      (gamekit:with-pushed-canvas ()
+        (ge.vg:scale-canvas 1 staunch-factor)
+        (let ((y-offset (ceiling (min 0 (- 150 (gamekit:y (ge.phy:body-position (body player))))))))
+          (draw-background y-offset)
+          (gamekit:with-pushed-canvas ()
+            (gamekit:translate-canvas 0 y-offset)
+            (dolist (item elements)
+              (render item))
+            (render player))))
+      (gamekit:draw-text (format nil "Staunch Factor: ~a" staunch-factor)
+                         (gamekit:vec2 0 420) :fill-color (gamekit:vec4 1 1 1 1)))
     (gamekit:draw-text (format nil "Player State: ~a" states)
                        (gamekit:vec2 0 460) :fill-color (gamekit:vec4 1 1 1 1))
     (gamekit:draw-text (format nil "Highest Element Y: ~a" level-height)
-                       (gamekit:vec2 0 440) :fill-color (gamekit:vec4 1 1 1 1))))
+                       (gamekit:vec2 0 440) :fill-color (gamekit:vec4 1 1 1 1))
+    (gamekit:draw-text (format nil "Current height: ~a" (gamekit:y (player-position player)))
+                       (gamekit:vec2 0 400) :fill-color (gamekit:vec4 1 1 1 1))))
 
 
 ;;; COLLISION HANDLING
