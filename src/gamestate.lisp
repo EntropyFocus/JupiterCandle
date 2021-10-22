@@ -106,9 +106,17 @@
                 (player-change-animation gamestate :jump-mid)
                 (player-change-animation gamestate :jump-fall))))))))
 
+(defun constrain-player-position (player)
+  (let ((position (player-position player)))
+    (when (< (gamekit:x position) 0)
+      (setf (player-position player) (gamekit:vec2 0 (gamekit:y position))))
+    (when (> (gamekit:x position) 640)
+      (setf (player-position player) (gamekit:vec2 640 (gamekit:y position))))))
+
 (defun gamestate-step (gamestate)
   (with-slots (player) gamestate
     (update-run gamestate)
+    (constrain-player-position player)
     (update-level gamestate (+ 500 (gamekit:y (player-position player))))))
 
 ;; ----------------
