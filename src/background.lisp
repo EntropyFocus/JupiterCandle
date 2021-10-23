@@ -7,14 +7,18 @@
 (gamekit:define-image jupiter-candle::bg-3 "textures/tilemap3.png")
 (gamekit:define-image jupiter-candle::bg-4 "textures/tilemap4.png")
 (gamekit:define-image jupiter-candle::bg-5 "textures/tilemap5.png")
+(gamekit:define-image jupiter-candle::bg-6 "textures/tilemap6.png")
+(gamekit:define-image jupiter-candle::bg-7 "textures/tilemap7.png")
+(gamekit:define-image jupiter-candle::bg-8 "textures/tilemap8.png")
+(gamekit:define-image jupiter-candle::bg-9 "textures/tilemap9.png")
 
 (gamekit:define-image jupiter-candle::layer-2-bg "textures/background.png")
 
 (defparameter *bg-layer-2-height* 1000)
 
-(defparameter *number-of-bg-images* 5)
+(defparameter *number-of-bg-images* 9)
 (defparameter *bg-image-height* 640)
-(defparameter *bg-images* (vector 'bg-1 'bg-2 'bg-3 'bg-4 'bg-5))
+(defparameter *bg-images* (vector 'bg-1 'bg-2 'bg-3 'bg-4 'bg-5 'bg-6 'bg-7 'bg-8 'bg-9))
 
 (defparameter *bg-random-state* (make-random-state))
 

@@ -97,7 +97,7 @@
     (let ((desired-vx (* desired-run-state *max-speed*))
           (vx (gamekit:x (player-speed player)))
           (vy (gamekit:y (player-speed player)))
-          (delta-vx (if (player-has-state gamestate :on-ground) 1 0.2)))
+          (delta-vx (if (player-has-state gamestate :on-ground) 4 0.2)))
       (when (< (abs (- vx desired-vx)) 20)
         (setf delta-vx (/ delta-vx 10)))
       (when (< (abs (- vx desired-vx)) 5)
