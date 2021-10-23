@@ -44,8 +44,12 @@
 (defun player-speed (player)
   (ge.phy:body-linear-velocity (body player)))
 
-(defun move-player (player offset)
-  (ge.phy:apply-force (body player) (gamekit:mult offset 10000)))
+(defun player-apply-impulse (player offset &key reset-vx reset-vy)
+  (with-slots (body) player
+    (let ((vx (if reset-vx 0 (gamekit:x (player-speed player))))
+          (vy (if reset-vy 0 (gamekit:y (player-speed player)))))
+      (setf (ge.phy:body-linear-velocity body) (gamekit:vec2 vx vy)))
+    (ge.phy:apply-force (body player) (gamekit:mult offset 10000))))
 
 (defmethod render ((this player))
   (let* ((position (player-position this)))
