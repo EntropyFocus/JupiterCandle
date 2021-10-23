@@ -5,7 +5,7 @@
 
 (defparameter *gravity* -800)
 (defparameter *jump-force* 35)
-(defparameter *dash-force* 20)
+(defparameter *dash-force* 27)
 
 (defparameter *max-speed* 150)
 
@@ -51,6 +51,14 @@
             (setf level-height (generate-level-section gamestate level-height
                                                        generator))))))
 
+(defun gamestate-player-animation (gamestate)
+  "Return the correct player animation for GAMESTATE"
+  (with-slots (states) gamestate
+    (cond ((member :dashed-recently states) :dash)
+          ((member :run states) :run)
+          ((member :on-ground states) :hit-ground)
+          ((t :jump)))))
+
 (defun player-has-state (gamestate state)
   (member state (slot-value gamestate 'states)))
 
@@ -85,7 +93,7 @@
               (setf desired-run-state 1)
               (setf (player-left-oriented-p player) nil))
             (setf desired-run-state 0)))
-  
+    
     (let ((desired-vx (* desired-run-state *max-speed*))
           (vx (gamekit:x (player-speed player)))
           (vy (gamekit:y (player-speed player)))
@@ -97,24 +105,24 @@
       (when (< (abs (- vx desired-vx)) 1)
         (setf delta-vx (/ delta-vx 10)))
       (when (< vx desired-vx)
-        (move-player player (gamekit:vec2 delta-vx 0)))
+        (player-apply-impulse player (gamekit:vec2 delta-vx 0)))
       (when (> vx desired-vx)
-        (move-player player (gamekit:vec2 (- delta-vx) 0)))
+        (player-apply-impulse player (gamekit:vec2 (- delta-vx) 0)))
       (when (> (abs vy) 10)
         (player-remove-state gamestate :on-ground))
       (if (player-has-state gamestate :on-ground)
-        (if (> (abs vx) 5)
-          (when (player-push-state gamestate :run)
-            (player-change-animation gamestate :idle-to-run))
+          (if (> (abs vx) 5)
+              (when (player-push-state gamestate :run)
+                (player-change-animation gamestate :idle-to-run))
+              (progn
+                (when (player-remove-state gamestate :run)
+                  (player-change-animation gamestate :idle))))
           (progn
-            (when (player-remove-state gamestate :run)
-              (player-change-animation gamestate :idle))))
-        (progn
-          (player-remove-state gamestate :run)
-          (when (< vy 0)
-            (if (< (abs vx) 40)
-                (player-change-animation gamestate :jump-mid)
-                (player-change-animation gamestate :jump-fall))))))))
+            (player-remove-state gamestate :run)
+            (when (< vy 0)
+              (if (< (abs vx) 40)
+                  (player-change-animation gamestate :jump-mid)
+                  (player-change-animation gamestate :jump-fall))))))))
 
 (defun constrain-player-position (player)
   (let ((position (player-position player))
@@ -144,7 +152,7 @@
         (player-change-animation gamestate :jump)
         (add-timer (+ (now) 0.3)
                    (lambda () (player-remove-state gamestate :jumped-recently))))
-      (move-player player (gamekit:vec2 0 *jump-force*)))))
+      (player-apply-impulse player (gamekit:vec2 0 *jump-force*)))))
 
 (defun can-dash? (gamestate)
   (and (not (player-has-state gamestate :dashed))
@@ -158,11 +166,12 @@
       (player-push-state gamestate :dashed-recently)
       (add-timer (+ (now) 0.7)
                  (lambda () (player-remove-state gamestate :dashed-recently)))
-      (move-player player
-                   (gamekit:vec2 (if (player-left-oriented-p player)
-                                     (- *dash-force*)
-                                     *dash-force*)
-                                 0)))))
+      (player-apply-impulse player
+                            (gamekit:vec2 (if (player-left-oriented-p player)
+                                              (- *dash-force*)
+                                              *dash-force*)
+                                          0)
+                            :reset-vx t))))
 
 ;;-----------------
 
@@ -220,7 +229,7 @@ physics engine should apply collision effects."
   (when (not (activated element))
     (setf (activated element) t)
     (with-slots (player) gamestate
-      (move-player player (gamekit:vec2 0 25)))
+      (player-apply-impulse player (gamekit:vec2 0 25)))
     (add-timer (+ (now) 2)
                (lambda () (setf (activated element) nil))))
   nil)
