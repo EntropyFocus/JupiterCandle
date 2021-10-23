@@ -217,12 +217,11 @@ physics engine should apply collision effects."
   t)
 
 (defmethod handle-element-pre-collision ((element jump-ring-element) gamestate)
-  (with-slots (activated) element
-    (when (not activated)
-      (setf activated t)
-      (with-slots (player) gamestate
-        (move-player player (gamekit:vec2 0 25)))
-      (add-timer (+ (now) 2)
-                 (lambda () (setf activated nil)))))
+  (when (not (activated element))
+    (setf (activated element) t)
+    (with-slots (player) gamestate
+      (move-player player (gamekit:vec2 0 25)))
+    (add-timer (+ (now) 2)
+               (lambda () (setf (activated element) nil))))
   nil)
 
