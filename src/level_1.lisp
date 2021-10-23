@@ -9,9 +9,9 @@
 
 (defun place-object (level-height)
   (if (< (random *platform-1-in*) 1)       
-      (list :floor :x (random 900) :y level-height :width 100)
+      (list 'platform-s :x (random 900) :y level-height)
       (when (< (random *portal-1-in*) 1)
-        (list :jump-ring :x (random 900) :y level-height))))
+        (list 'jump-ring :x (random 900) :y level-height))))
 
 (define-level-section-generator random ()
   (let ((result nil))

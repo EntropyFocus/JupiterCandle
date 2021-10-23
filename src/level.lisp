@@ -18,15 +18,6 @@ X and Y specify the position within the level section."
   `(progn
      (setf (gethash ',name *section-generators*) (lambda () ,@body))))
 
-(defun make-element (level-height spec)
-  (alexandria:destructuring-ecase spec
-    ((:jump-ring &key (x 0) (y 0) &allow-other-keys)
-     (make-instance 'jump-ring-element
-                    :position (gamekit:vec2 x (+ level-height y))))
-    ((:floor &key (x 0) (y 0) (width 10))
-     (make-instance 'floor-element
-                    :position (gamekit:vec2 x (+ level-height y)) :width width))))
-
 (defun generate-level-section (gamestate level-height generator-name)
   "Generate level elements in GAMESTATE at LEVEL-HEIGHT using the level section
 generator GENERATOR-NAME. Returns the y position of the highest generated element."
@@ -51,7 +42,7 @@ generator GENERATOR-NAME. Returns the y position of the highest generated elemen
 ;; -------------------------------------------------
 
 (defparameter *static-level*
-  '((:floor :x 320 :y 10 :width 640)))
+  '((ground-floor :x 320 :y 10)))
 
 (defun init-level-elements ()
   (loop for spec in *static-level*

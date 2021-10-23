@@ -2,6 +2,20 @@
 
 (defparameter *draw-bounding-boxes* nil)
 
+(defvar *element-constructors* (make-hash-table))
+
+(defmacro define-element-constructor (name spec &body body)
+  `(progn
+     (setf (gethash ,name *element-constructors*)
+           (lambda (,@spec)
+             ,@body))))
+
+(defun make-element (level-height spec)
+  (let ((constructor (gethash (car spec) *element-constructors*))
+        (x (getf (cdr spec) :x))
+        (y (getf (cdr spec) :y)))
+    (funcall constructor (gamekit:vec2 x (+ level-height y)))))
+
 ;; LEVEL-ELEMENT
 
 (defclass level-element ()
@@ -28,13 +42,15 @@
 ;; Boxed collision element
 
 (defclass boxed-element (level-element)
-  ((width :initarg :width)
-   height
-   shape))
+  (shape))
+
+(defgeneric element-width (element))
+(defgeneric element-height (element))
 
 (defmethod initialize-instance :after ((this boxed-element) &key &allow-other-keys)
-  (with-slots (body width height shape) this
-    (setf shape (ge.phy:make-box-shape *universe* width height
+  (with-slots (body shape) this
+    (setf shape (ge.phy:make-box-shape *universe*
+                                       (element-width this) (element-height this)
                                        :body body :substance this))))
 
 (defmethod destroy-element :after ((this boxed-element))
@@ -42,24 +58,41 @@
     (ge.ng:dispose shape)))
 
 (defmethod element-origin ((this boxed-element))
-  (with-slots (width height) this
-    (gamekit:subt (element-position this) (gamekit:vec2 (/ width 2) (/ height 2)))))
+  (gamekit:subt (element-position this) (gamekit:vec2 (/ (element-width this) 2)
+                                                      (/ (element-height this) 2))))
 
 (defmethod render :after ((this boxed-element))
   (when *draw-bounding-boxes*
-    (with-slots (width height) this
-      (gamekit:draw-rect (element-origin this) width height
-                         :stroke-paint (gamekit:vec4 1 0 0 1)))))
+    (gamekit:draw-rect (element-origin this)
+                       (element-width this) (element-height this)
+                       :stroke-paint (gamekit:vec4 1 0 0 1))))
 
 ;; Floor element
 
+(gamekit:define-image jupiter-candle::ground-floor "textures/ground_floor.png")
+(gamekit:define-image jupiter-candle::platform-l "textures/platform_l.png")
+(gamekit:define-image jupiter-candle::platform-m "textures/platform_m.png")
+(gamekit:define-image jupiter-candle::platform-s "textures/platform_s.png")
+(gamekit:define-image jupiter-candle::platform-xs "textures/platform_xs.png")
+(defparameter *floor-element-height* 16)
+
 (defclass floor-element (boxed-element)
-  ((height :initform 10)))
+  ((image :initarg :image)))
+
+(defmethod element-width ((this floor-element))
+  (with-slots (image) this
+    (gamekit:image-width image)))
+
+(defmethod element-height ((this floor-element))
+  *floor-element-height*)
 
 (defmethod render ((this floor-element))
-  (with-slots (width height) this
-    (gamekit:draw-rect (element-origin this) width height
-                       :fill-paint (gamekit:vec4 0.4 0.3 0.8 1))))
+  (with-slots (image) this
+    (gamekit:draw-image (element-origin this) image)))
+
+(dolist (item '(platform-l platform-m platform-s platform-xs ground-floor))
+  (define-element-constructor item (position)
+    (make-instance 'floor-element :position position :image item)))
 
 ;; Jump Ring
 
@@ -72,9 +105,12 @@
      (:idle        :row 1 :frames 1))
    :origin (gamekit:vec2 65 50)))
 
+(define-element-constructor 'jump-ring (position)
+  (make-instance 'jump-ring-element :position position))
+
 (defclass jump-ring-element (boxed-element)
-  ((width :initform 100)
-   (height :initform 20)
+  ((width :initform 100 :reader element-width)
+   (height :initform 20 :reader element-height)
    (activated :initform nil
               :documentation "T if collision effects have already been applied")
    (sprite :initform (make-animated-sprite *portal-animations* :active))))
@@ -90,10 +126,8 @@
         (animated-sprite-change-animation sprite :active))))
 
 (defmethod render ((this jump-ring-element))
-  (with-slots (activated width height) this
-    (draw-animated-sprite (slot-value this 'sprite) (element-position this))
-    #++(gamekit:draw-rect (element-origin this) width height
-                       :fill-paint (gamekit:vec4 1 (if activated 1 0.5) 0 1))))
+  (with-slots (activated) this
+    (draw-animated-sprite (slot-value this 'sprite) (element-position this))))
 
 ;; Windmill
 
