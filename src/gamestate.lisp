@@ -139,14 +139,14 @@
       (when (> (gamekit:x velocity) 0)
         (setf (ge.phy:body-linear-velocity (body player)) (gamekit:vec2 0 (gamekit:y velocity)))))))
 
-(defun gamestate-step (gamestate)
-  (with-slots (player tick elements) gamestate
+(defmethod act ((this gamestate))
+  (with-slots (player tick elements) this
     (incf tick)
     (dolist (item elements)
       (element-act item tick))
-    (update-run gamestate)
+    (update-run this)
     (constrain-player-position player)
-    (update-level gamestate (+ 500 (gamekit:y (player-position player))))))
+    (update-level this (+ 500 (gamekit:y (player-position player))))))
 
 ;; ----------------
 
@@ -181,8 +181,36 @@
 
 ;;-----------------
 
-(defun gamestate-draw (gamestate)
-  (with-slots (player elements states level-height) gamestate
+(defmethod activate ((this gamestate))
+  (gamekit:bind-button :up :pressed (lambda () (jump this)))
+  (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))
+  (gamekit:bind-button :left :released (lambda () (setf *left-pressed* nil)))
+  (gamekit:bind-button :right :pressed (lambda () (setf *right-pressed* t)))
+  (gamekit:bind-button :right :released (lambda () (setf *right-pressed* nil)))
+
+  (gamekit:bind-button :C :pressed (lambda () (dash this)))
+
+  (gamekit:bind-button :R :pressed
+                       (lambda ()
+                         (reinitialize-level this)))
+  
+  (gamekit:play-sound 'game-sound :looped-p t))
+
+(defmethod deactivate ((this gamestate))
+  (gamekit:bind-button :up :pressed nil)
+  (gamekit:bind-button :left :pressed nil)
+  (gamekit:bind-button :left :released nil)
+  (gamekit:bind-button :right :pressed nil)
+  (gamekit:bind-button :right :released nil)
+
+  (gamekit:bind-button :C :pressed nil)
+
+  (gamekit:bind-button :R :pressed nil)
+  
+  (gamekit:stop-sound 'game-sound))
+
+(defmethod render ((this gamestate))
+  (with-slots (player elements states level-height) this
     (let* ((y-speed        (gamekit:y (player-speed player)))
            (staunch-factor (exp (- (/ (abs (max 0 (- y-speed 500))) 7000)))))
       (gamekit:with-pushed-canvas ()

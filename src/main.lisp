@@ -3,8 +3,11 @@
 (defvar *last-timestamp* 0
   "Helper variable to calculate *elapsed-time*")
 
+(defparameter *welcome-state* (make-instance 'welcome-state))
+
 (gamekit:defgame jupiter-game ()
-  ((gamestate :initform nil :accessor jupiter-gamestate))
+  ((gamestate :initform nil :accessor jupiter-gamestate)
+   (current-state :initform nil :accessor current-state))
   (:viewport-title "Jupiter Candle")
   (:viewport-width 640)
   (:viewport-height 480)
@@ -19,7 +22,7 @@
 (defmethod gamekit:draw ((this jupiter-game))
   (update-elapsed-time)
   (gamekit:draw-text (format nil "Elapsed time: ~a" *elapsed-time*) (gamekit:vec2 0 0))
-  (gamestate-draw (jupiter-gamestate this)))
+  (render (current-state this)))
 
 (defmethod gamekit:post-initialize ((this jupiter-game))
   (setq *universe* (ge.phy:make-universe :2d :on-pre-solve
@@ -31,25 +34,22 @@
 
   (setf *last-timestamp* (now))
 
-  (gamekit:play-sound 'game-sound :looped-p t)
-
-  (gamekit:bind-button :up :pressed #'(lambda () (jump (jupiter-gamestate this))))
-  (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))
-  (gamekit:bind-button :left :released (lambda () (setf *left-pressed* nil)))
-  (gamekit:bind-button :right :pressed (lambda () (setf *right-pressed* t)))
-  (gamekit:bind-button :right :released (lambda () (setf *right-pressed* nil)))
-
-  (gamekit:bind-button :C :pressed (lambda () (dash (jupiter-gamestate this))))
-
-  (gamekit:bind-button :R :pressed
-                       (lambda ()
-                         (reinitialize-level (jupiter-gamestate this)))))
+  (change-state this *welcome-state*))
 
 (defmethod gamekit:act ((this jupiter-game))
   (process-timers)
   (loop for i from 0 below *step-split* do
         (ge.phy:observe-universe *universe* (/ *universe-step* *step-split*)))
-  (gamestate-step (jupiter-gamestate this)))
+  (act (current-state this)))
+
+(defun change-state (jupiter-game new-state)
+  (when (current-state jupiter-game)
+    (deactivate (current-state jupiter-game)))
+  (setf (current-state jupiter-game) new-state)
+  (activate new-state))
+
+(defun start-game (jupiter-game)
+  (change-state jupiter-game (slot-value jupiter-game 'gamestate)))
 
 (defun main ()
   (gamekit:start 'jupiter-game))
