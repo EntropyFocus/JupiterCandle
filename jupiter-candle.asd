@@ -7,6 +7,7 @@
                 :components
                 ((:file "packages")
                  (:file "timer")
+                 (:file "assets")
                  (:file "sprite")
                  (:file "background")
                  (:file "element")

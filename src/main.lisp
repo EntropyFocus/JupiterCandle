@@ -31,6 +31,8 @@
 
   (setf *last-timestamp* (now))
 
+  (gamekit:play-sound 'game-sound :looped-p t)
+
   (gamekit:bind-button :up :pressed #'(lambda () (jump (jupiter-gamestate this))))
   (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))
   (gamekit:bind-button :left :released (lambda () (setf *left-pressed* nil)))

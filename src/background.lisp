@@ -1,7 +1,5 @@
 (in-package :jupiter-candle)
 
-(gamekit:register-resource-package :jupiter-candle (asdf:system-relative-pathname :jupiter-candle "assets/"))
-
 (gamekit:define-image jupiter-candle::bg-1 "textures/tilemap1.png")
 (gamekit:define-image jupiter-candle::bg-2 "textures/tilemap2.png")
 (gamekit:define-image jupiter-candle::bg-3 "textures/tilemap3.png")
