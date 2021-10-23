@@ -22,6 +22,9 @@
   ((elements
     :initform (init-level-elements)
     :documentation "List of level elements the player can interact with")
+   (tick
+    :initform 0
+    :documentation "Elapsed game ticks. Incremented on each GAMESTATE-STEP call.")
    (level-height
     :initform 0
     :documentation "Y position of the highest generated level element")
@@ -137,7 +140,10 @@
         (setf (ge.phy:body-linear-velocity (body player)) (gamekit:vec2 0 (gamekit:y velocity)))))))
 
 (defun gamestate-step (gamestate)
-  (with-slots (player) gamestate
+  (with-slots (player tick) gamestate
+    (incf tick)
+    (dolist (item elements)
+      (element-act item tick))
     (update-run gamestate)
     (constrain-player-position player)
     (update-level gamestate (+ 500 (gamekit:y (player-position player))))))
