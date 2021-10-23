@@ -56,14 +56,35 @@
 
 ;; Jump Ring
 
+(gamekit:define-image jupiter-candle::portal-anim "textures/portal.png")
+
+(defparameter *portal-animations*
+  (make-animated-sprite-resource
+   'portal-anim 130 100
+   '((:active      :row 0 :frames 6 :speed 100)
+     (:idle        :row 1 :frames 1))
+   :origin (gamekit:vec2 65 50)))
+
 (defclass jump-ring-element (boxed-element)
   ((width :initform 100)
    (height :initform 20)
    (activated :initform nil
-              :documentation "T if collision effects have already been applied")))
+              :documentation "T if collision effects have already been applied")
+   (sprite :initform (make-animated-sprite *portal-animations* :active))))
+
+(defmethod activated ((this jump-ring-element))
+  (slot-value this 'activated))
+
+(defmethod (setf activated) (on (this jump-ring-element))
+  (with-slots (sprite activated) this
+    (setf activated on)
+    (if on
+        (animated-sprite-change-animation sprite :idle)
+        (animated-sprite-change-animation sprite :active))))
 
 (defmethod render ((this jump-ring-element))
   (with-slots (activated width height) this
-    (gamekit:draw-rect (element-origin this) width height
+    (draw-animated-sprite (slot-value this 'sprite) (element-position this))
+    #++(gamekit:draw-rect (element-origin this) width height
                        :fill-paint (gamekit:vec4 1 (if activated 1 0.5) 0 1))))
 
