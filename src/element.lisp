@@ -38,17 +38,23 @@ A level section generator can then provide an item like
     :documentation "The body for the physics simulation")
    (level-height :initarg :level-height)
    (x :initarg :x)
-   (y :initarg :y)))
+   (y :initarg :y)
+   (rotation :initform 0 :initarg :rotation)))
 
 (defmethod initialize-instance :after ((this level-element) &key &allow-other-keys)
-  (with-slots (body x y level-height) this
+  (with-slots (body x y rotation level-height) this
     (setf body (ge.phy:make-kinematic-body *universe*))
     (setf (ge.phy:body-position body) (gamekit:vec2 (eval-timed 0 x)
-                                                    (+ level-height (eval-timed 0 y))))))
+                                                    (+ level-height (eval-timed 0 y))))
+    (setf (ge.phy:body-rotation body) (ge.ng:euler-angle->mat2 rotation))))
 
 (defmethod element-position ((this level-element))
   (with-slots (body) this
     (ge.phy:body-position body)))
+
+(defmethod element-rotation ((this level-element))
+  (with-slots (body) this
+    (ge.ng:mat2->euler-angle (ge.phy:body-rotation body))))
 
 (defmethod render :after ((this level-element))
   (when *draw-bounding-boxes*
@@ -93,9 +99,15 @@ A level section generator can then provide an item like
 
 (defmethod render :after ((this boxed-element))
   (when *draw-bounding-boxes*
-    (gamekit:draw-rect (element-origin this)
-                       (element-width this) (element-height this)
-                       :stroke-paint (gamekit:vec4 1 0 0 1))))
+    (ge.vg:with-retained-canvas
+      (let ((origin (element-position this)))
+        (ge.vg:translate-canvas (gamekit:x origin) (gamekit:y origin))
+        (ge.vg:rotate-canvas (element-rotation this))
+        (ge.vg:translate-canvas (- (/ (element-width this) 2))
+                                (- (/ (element-height this) 2)))
+        (gamekit:draw-rect (gamekit:vec2 0 0)
+                           (element-width this) (element-height this)
+                           :stroke-paint (gamekit:vec4 1 0 0 1))))))
 
 ;; Floor element
 
@@ -118,13 +130,19 @@ A level section generator can then provide an item like
 
 (defmethod render ((this floor-element))
   (with-slots (image) this
-    (gamekit:draw-image (element-origin this) image)))
+    (ge.vg:with-retained-canvas
+      (let ((origin (element-position this)))
+        (ge.vg:translate-canvas (gamekit:x origin) (gamekit:y origin))
+        (ge.vg:rotate-canvas (element-rotation this))
+        (ge.vg:translate-canvas (- (/ (element-width this) 2))
+                                (- (/ (element-height this) 2)))
+        (gamekit:draw-image (gamekit:vec2 0 0) image)))))
 
 (dolist (item '(platform-l platform-m platform-s platform-xs ground-floor))
-  (define-element-constructor item (level-height &key (x 0) (y 0))
+  (define-element-constructor item (level-height &key (x 0) (y 0) (rotation 0))
     (make-instance 'floor-element
                    :level-height level-height
-                   :x x :y y
+                   :x x :y y :rotation rotation
                    :image item)))
 
 ;; Jump Ring

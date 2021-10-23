@@ -28,7 +28,7 @@ generator GENERATOR-NAME. Returns the y position of the highest generated elemen
       (loop for spec in specs
             when spec
             do
-            (setf max-y (max max-y (getf (cdr spec) :y)))
+            (setf max-y (max max-y (eval-timed 0 (getf (cdr spec) :y))))
             (push (make-element level-height spec) elements)))
     (+ level-height max-y)))
 
@@ -44,7 +44,7 @@ generator GENERATOR-NAME. Returns the y position of the highest generated elemen
 (defparameter *static-level*
   (list
    (list 'ground-floor :x 320 :y 10)
-   #++(list 'platform-s :x 200 :y (lambda (tick) (+ 100 (* (sin (/ tick 100)) 100))))))
+   (list 'platform-m :x 200 :y 70 :rotation 1.2)))
 
 (defun init-level-elements ()
   (loop for spec in *static-level*

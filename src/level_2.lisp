@@ -18,4 +18,4 @@
                         (x-range (+ (random 320) 100)))
                     (list (funcall random-platform)
                           :x (lambda (tick) (+ x-offset (* (sin (/ tick x-speed)) x-range)))
-                          :y (* level 80))))))
+                          :y (+ 70 (* level 80)))))))
