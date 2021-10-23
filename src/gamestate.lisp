@@ -170,8 +170,8 @@
                             (gamekit:vec2 (if (player-left-oriented-p player)
                                               (- *dash-force*)
                                               *dash-force*)
-                                          0)
-                            :reset-vx t))))
+                                          (/ *dash-force* 3))
+                            :reset-vx t :reset-vy t))))
 
 ;;-----------------
 
