@@ -49,9 +49,10 @@
 
 (defmethod render ((this player))
   (let* ((position (player-position this)))
-    (gamekit:draw-circle position 5 :fill-paint (gamekit:vec4 1 0 0 1))
-    (gamekit:draw-circle position (/ (gamekit:y *player-size*) 2)
-                         :stroke-paint (gamekit:vec4 1 0 0 1))
+    (when *draw-bounding-boxes*
+      (gamekit:draw-circle position 5 :fill-paint (gamekit:vec4 1 0 0 1))
+      (gamekit:draw-circle position (/ (gamekit:y *player-size*) 2)
+                           :stroke-paint (gamekit:vec4 1 0 0 1)))
     (draw-animated-sprite (slot-value this 'sprite) position
                           :mirror-x (slot-value this 'left-oriented))))
 

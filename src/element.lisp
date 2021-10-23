@@ -1,5 +1,7 @@
 (in-package :jupiter-candle)
 
+(defparameter *draw-bounding-boxes* nil)
+
 ;; LEVEL-ELEMENT
 
 (defclass level-element ()
@@ -16,7 +18,8 @@
     (ge.phy:body-position body)))
 
 (defmethod render :after ((this level-element))
-  (gamekit:draw-circle (element-position this) 5 :fill-paint (gamekit:vec4 1 0 0 1)))
+  (when *draw-bounding-boxes*
+    (gamekit:draw-circle (element-position this) 5 :fill-paint (gamekit:vec4 1 0 0 1))))
 
 (defmethod destroy-element ((this level-element))
   (with-slots (body) this
@@ -43,9 +46,10 @@
     (gamekit:subt (element-position this) (gamekit:vec2 (/ width 2) (/ height 2)))))
 
 (defmethod render :after ((this boxed-element))
-  (with-slots (width height) this
-    (gamekit:draw-rect (element-origin this) width height
-                       :stroke-paint (gamekit:vec4 1 0 0 1))))
+  (when *draw-bounding-boxes*
+    (with-slots (width height) this
+      (gamekit:draw-rect (element-origin this) width height
+                         :stroke-paint (gamekit:vec4 1 0 0 1)))))
 
 ;; Floor element
 
