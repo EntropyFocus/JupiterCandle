@@ -37,6 +37,8 @@
   (gamekit:bind-button :right :pressed (lambda () (setf *right-pressed* t)))
   (gamekit:bind-button :right :released (lambda () (setf *right-pressed* nil)))
 
+  (gamekit:bind-button :C :pressed (lambda () (dash (jupiter-gamestate this))))
+
   (gamekit:bind-button :R :pressed
                        (lambda ()
                          (reinitialize-level (jupiter-gamestate this)))))

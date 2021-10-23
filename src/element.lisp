@@ -6,6 +6,11 @@
   ((body
     :documentation "The body for the physics simulation")))
 
+(defmethod initialize-instance :after ((this level-element) &key position &allow-other-keys)
+  (with-slots (body) this
+    (setf body (ge.phy:make-kinematic-body *universe*))
+    (setf (ge.phy:body-position body) position)))
+
 (defmethod element-position ((this level-element))
   (with-slots (body) this
     (ge.phy:body-position body)))
@@ -24,10 +29,8 @@
    height
    shape))
 
-(defmethod initialize-instance :after ((this boxed-element) &key position &allow-other-keys)
+(defmethod initialize-instance :after ((this boxed-element) &key &allow-other-keys)
   (with-slots (body width height shape) this
-    (setf body (ge.phy:make-kinematic-body *universe*))
-    (setf (ge.phy:body-position body) position)
     (setf shape (ge.phy:make-box-shape *universe* width height
                                        :body body :substance this))))
 
@@ -67,3 +70,11 @@
     (gamekit:draw-rect (element-origin this) width height
                        :fill-paint (gamekit:vec4 1 (if activated 1 0.5) 0 1))))
 
+;; Windmill
+
+(defclass windmill-element (level-element)
+  (shapes :initform nil))
+
+(defmethod initialize-instance :after ((this level-element) &key)
+  (with-slots (shapes body) this
+    nil))

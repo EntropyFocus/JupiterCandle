@@ -5,6 +5,7 @@
 
 (defparameter *gravity* -800)
 (defparameter *jump-force* 35)
+(defparameter *dash-force* 20)
 
 (defparameter *max-speed* 150)
 
@@ -78,11 +79,11 @@
     (if (and *left-pressed* (not *right-pressed*))
         (progn
           (setf desired-run-state -1)
-          (setf (player-left-oriented player) t))
+          (setf (player-left-oriented-p player) t))
         (if (and *right-pressed* (not *left-pressed*))
             (progn
               (setf desired-run-state 1)
-              (setf (player-left-oriented player) nil))
+              (setf (player-left-oriented-p player) nil))
             (setf desired-run-state 0)))
   
     (let ((desired-vx (* desired-run-state *max-speed*))
@@ -145,6 +146,24 @@
                    (lambda () (player-remove-state gamestate :jumped-recently))))
       (move-player player (gamekit:vec2 0 *jump-force*)))))
 
+(defun can-dash? (gamestate)
+  (and (not (player-has-state gamestate :dashed))
+       (not (player-has-state gamestate :dashed-recently))))
+
+(defun dash (gamestate)
+  (with-slots (player) gamestate
+    (when (can-dash? gamestate)
+      (player-change-animation gamestate :dash)
+      (player-push-state gamestate :dashed)
+      (player-push-state gamestate :dashed-recently)
+      (add-timer (+ (now) 0.7)
+                 (lambda () (player-remove-state gamestate :dashed-recently)))
+      (move-player player
+                   (gamekit:vec2 (if (player-left-oriented-p player)
+                                     (- *dash-force*)
+                                     *dash-force*)
+                                 0)))))
+
 ;;-----------------
 
 (defun gamestate-draw (gamestate)
@@ -191,6 +210,7 @@ physics engine should apply collision effects."
 (defmethod handle-element-pre-collision ((element floor-element) gamestate)
   (when (not (player-has-state gamestate :jumped-recently))
     (when (player-push-state gamestate :on-ground)
+      (player-remove-state gamestate :dashed)
       (player-change-animation gamestate :hit-ground)))
   (setf (ge.phy:collision-friction)         1.0)
   (setf (ge.phy:collision-elasticity)       0.0)
