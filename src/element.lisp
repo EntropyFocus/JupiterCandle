@@ -59,8 +59,11 @@ A level section generator can then provide an item like
 (defmethod element-act ((this level-element) tick)
   (with-slots (x y body level-height) this
     (when (or (functionp x) (functionp y))
-      (setf (ge.phy:body-position body) (gamekit:vec2 (eval-timed tick x)
-                                                      (+ level-height (eval-timed tick y)))))))
+      (let* ((position (ge.phy:body-position body))
+             (new-position (gamekit:vec2 (eval-timed tick x)
+                                         (+ level-height (eval-timed tick y))))
+             (new-velocity (gamekit:subt new-position position)))
+        (setf (ge.phy:body-linear-velocity body) new-velocity)))))
 
 (defmethod destroy-element ((this level-element))
   (with-slots (body) this
