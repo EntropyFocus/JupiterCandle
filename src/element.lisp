@@ -5,27 +5,46 @@
 (defvar *element-constructors* (make-hash-table))
 
 (defmacro define-element-constructor (name spec &body body)
+  "Define a constructor for a level element. The first argument
+of a constructor is LEVEL-HEIGHT denoting the height of the
+level section.
+
+Example:
+
+    (define-element-constructor xyz (level-height &key (x 0) (y 0))
+      (make-instance 'floor-element 
+                     :x x :y y :level-height level-height
+
+A level section generator can then provide an item like
+
+    '(xyz :x 342 :y 842)"
   `(progn
      (setf (gethash ,name *element-constructors*)
            (lambda (,@spec)
              ,@body))))
 
+(defun eval-timed (time val)
+  (cond ((functionp val) (funcall val time))
+        (t val)))
+
 (defun make-element (level-height spec)
-  (let ((constructor (gethash (car spec) *element-constructors*))
-        (x (getf (cdr spec) :x))
-        (y (getf (cdr spec) :y)))
-    (funcall constructor (gamekit:vec2 x (+ level-height y)))))
+  (let ((constructor (gethash (car spec) *element-constructors*)))
+    (apply constructor level-height (cdr spec))))
 
 ;; LEVEL-ELEMENT
 
 (defclass level-element ()
   ((body
-    :documentation "The body for the physics simulation")))
+    :documentation "The body for the physics simulation")
+   (level-height :initarg :level-height)
+   (x :initarg :x)
+   (y :initarg :y)))
 
-(defmethod initialize-instance :after ((this level-element) &key position &allow-other-keys)
-  (with-slots (body) this
+(defmethod initialize-instance :after ((this level-element) &key &allow-other-keys)
+  (with-slots (body x y level-height) this
     (setf body (ge.phy:make-kinematic-body *universe*))
-    (setf (ge.phy:body-position body) position)))
+    (setf (ge.phy:body-position body) (gamekit:vec2 (eval-timed 0 x)
+                                                    (+ level-height (eval-timed 0 y))))))
 
 (defmethod element-position ((this level-element))
   (with-slots (body) this
@@ -34,6 +53,17 @@
 (defmethod render :after ((this level-element))
   (when *draw-bounding-boxes*
     (gamekit:draw-circle (element-position this) 5 :fill-paint (gamekit:vec4 1 0 0 1))))
+
+(defgeneric element-act (element tick))
+
+(defmethod element-act ((this level-element) tick)
+  (with-slots (x y body level-height) this
+    (when (or (functionp x) (functionp y))
+      (let* ((position (ge.phy:body-position body))
+             (new-position (gamekit:vec2 (eval-timed tick x)
+                                         (+ level-height (eval-timed tick y))))
+             (new-velocity (gamekit:subt new-position position)))
+        (setf (ge.phy:body-linear-velocity body) new-velocity)))))
 
 (defmethod destroy-element ((this level-element))
   (with-slots (body) this
@@ -91,8 +121,11 @@
     (gamekit:draw-image (element-origin this) image)))
 
 (dolist (item '(platform-l platform-m platform-s platform-xs ground-floor))
-  (define-element-constructor item (position)
-    (make-instance 'floor-element :position position :image item)))
+  (define-element-constructor item (level-height &key (x 0) (y 0))
+    (make-instance 'floor-element
+                   :level-height level-height
+                   :x x :y y
+                   :image item)))
 
 ;; Jump Ring
 
@@ -105,8 +138,8 @@
      (:idle        :row 1 :frames 1))
    :origin (gamekit:vec2 65 50)))
 
-(define-element-constructor 'jump-ring (position)
-  (make-instance 'jump-ring-element :position position))
+(define-element-constructor 'jump-ring (level-height &key (x 0) (y 0))
+  (make-instance 'jump-ring-element :level-height level-height :x x :y y))
 
 (defclass jump-ring-element (boxed-element)
   ((width :initform 100 :reader element-width)
