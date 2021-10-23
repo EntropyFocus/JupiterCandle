@@ -51,12 +51,7 @@ generator GENERATOR-NAME. Returns the y position of the highest generated elemen
 ;; -------------------------------------------------
 
 (defparameter *static-level*
-  '((:floor :x 320 :y 10 :width 640)
-    (:floor :x 340 :y 40 :width  40)
-    (:floor :x 370 :y 60 :width  40)
-    (:floor :x 150 :y 90 :width  40)
-    (:floor :x 340 :y 190 :width  40)
-    (:floor :x 50 :y 30 :width 30)))
+  '((:floor :x 320 :y 10 :width 640)))
 
 (defun init-level-elements ()
   (loop for spec in *static-level*
