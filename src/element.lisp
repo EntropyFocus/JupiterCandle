@@ -93,9 +93,9 @@
 
 ;; Windmill
 
-(defclass windmill-element (level-element)
-  (shapes :initform nil))
+;; (defclass windmill-element (level-element)
+;;   (shapes :initform nil))
 
-(defmethod initialize-instance :after ((this level-element) &key)
-  (with-slots (shapes body) this
-    nil))
+;; (defmethod initialize-instance :after ((this level-element) &key)
+;;   (with-slots (shapes body) this
+;;     nil))
