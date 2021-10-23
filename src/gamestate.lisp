@@ -140,7 +140,7 @@
         (setf (ge.phy:body-linear-velocity (body player)) (gamekit:vec2 0 (gamekit:y velocity)))))))
 
 (defun gamestate-step (gamestate)
-  (with-slots (player tick) gamestate
+  (with-slots (player tick elements) gamestate
     (incf tick)
     (dolist (item elements)
       (element-act item tick))

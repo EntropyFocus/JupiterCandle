@@ -13,7 +13,7 @@ Example:
 
     (define-element-constructor xyz (level-height &key (x 0) (y 0))
       (make-instance 'floor-element 
-                     :position (gamekit:vec2 x (+ level-height y)))
+                     :x x :y y :level-height level-height
 
 A level section generator can then provide an item like
 
@@ -36,13 +36,15 @@ A level section generator can then provide an item like
 (defclass level-element ()
   ((body
     :documentation "The body for the physics simulation")
+   (level-height :initarg :level-height)
    (x :initarg :x)
    (y :initarg :y)))
 
-(defmethod initialize-instance :after ((this level-element) &key position &allow-other-keys)
-  (with-slots (body) this
+(defmethod initialize-instance :after ((this level-element) &key &allow-other-keys)
+  (with-slots (body x y level-height) this
     (setf body (ge.phy:make-kinematic-body *universe*))
-    (setf (ge.phy:body-position body) position)))
+    (setf (ge.phy:body-position body) (gamekit:vec2 (eval-timed 0 x)
+                                                    (+ level-height (eval-timed 0 y))))))
 
 (defmethod element-position ((this level-element))
   (with-slots (body) this
@@ -55,9 +57,10 @@ A level section generator can then provide an item like
 (defgeneric element-act (element tick))
 
 (defmethod element-act ((this level-element) tick)
-  (with-slots (x y) this
+  (with-slots (x y body level-height) this
     (when (or (functionp x) (functionp y))
-      NIL)))
+      (setf (ge.phy:body-position body) (gamekit:vec2 (eval-timed tick x)
+                                                      (+ level-height (eval-timed tick y)))))))
 
 (defmethod destroy-element ((this level-element))
   (with-slots (body) this
@@ -116,9 +119,10 @@ A level section generator can then provide an item like
 
 (dolist (item '(platform-l platform-m platform-s platform-xs ground-floor))
   (define-element-constructor item (level-height &key (x 0) (y 0))
-    (make-instance 'floor-element :position (gamekit:vec2 (eval-timed 0 x)
-                                                          (+ level-height (eval-timed 0 y)))
-                                  :image item)))
+    (make-instance 'floor-element
+                   :level-height level-height
+                   :x x :y y
+                   :image item)))
 
 ;; Jump Ring
 
@@ -132,8 +136,7 @@ A level section generator can then provide an item like
    :origin (gamekit:vec2 65 50)))
 
 (define-element-constructor 'jump-ring (level-height &key (x 0) (y 0))
-  (make-instance 'jump-ring-element
-                 :position (gamekit:vec2 x (+ level-height y))))
+  (make-instance 'jump-ring-element :level-height level-height :x x :y y))
 
 (defclass jump-ring-element (boxed-element)
   ((width :initform 100 :reader element-width)
