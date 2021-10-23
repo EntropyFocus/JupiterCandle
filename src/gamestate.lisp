@@ -15,7 +15,7 @@
 (defvar *right-pressed* nil)
 (defvar *up-pressed* nil)
 
-(defparameter *first-generator* 'random
+(defparameter *first-generator* 'frogger
   "Specifies the first generator applied at the ground level section.")
 
 (defclass gamestate ()

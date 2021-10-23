@@ -44,7 +44,7 @@ generator GENERATOR-NAME. Returns the y position of the highest generated elemen
 (defparameter *static-level*
   (list
    (list 'ground-floor :x 320 :y 10)
-   (list 'platform-s :x 200 :y (lambda (tick) (+ 100 (* (sin (/ tick 100)) 100))))))
+   #++(list 'platform-s :x 200 :y (lambda (tick) (+ 100 (* (sin (/ tick 100)) 100))))))
 
 (defun init-level-elements ()
   (loop for spec in *static-level*
