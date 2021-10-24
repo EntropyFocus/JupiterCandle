@@ -8,6 +8,7 @@
 (defparameter *dash-force* 27)
 
 (defparameter *max-speed* 150)
+(defparameter *bump-threshold* (expt (+ 50 *max-speed*) 2))
 
 
 (defvar *surface-v* (gamekit:vec2 0 0))
@@ -19,7 +20,7 @@
 (defvar *right-pressed* nil)
 (defvar *up-pressed* nil)
 
-(defparameter *first-generator* 'frogger
+(defparameter *first-generator* 'railgun
   "Specifies the first generator applied at the ground level section.")
 
 (defclass gamestate ()
@@ -159,6 +160,7 @@
     (when (player-has-state gamestate :on-ground)
       (player-remove-state gamestate :on-ground)
       (when (player-push-state gamestate :jumped-recently)
+        (gamekit:play-sound 'jump-sound)
         (player-change-animation gamestate :jump)
         (add-timer (+ (now) 0.3)
                    (lambda () (player-remove-state gamestate :jumped-recently))))
@@ -274,6 +276,12 @@ physics engine should apply collision effects."
     (when (player-push-state gamestate :on-ground)
       (player-remove-state gamestate :dashed)
       (player-change-animation gamestate :hit-ground)))
+  (let* ((player-speed (player-speed (slot-value gamestate 'player)))
+         (element-speed (element-speed element))
+         (diff (gamekit:subt player-speed element-speed)))
+    (setq *surface-v* diff)
+    (when (> (+ (expt (gamekit:x diff) 2) (expt (gamekit:y diff) 2)) *bump-threshold*)
+      (gamekit:play-sound 'bump-sound)))
   (setf (ge.phy:collision-friction)         0.0)
   (setf (ge.phy:collision-elasticity)       0.0)
   #++(let ((v (element-speed element)))
@@ -289,6 +297,7 @@ physics engine should apply collision effects."
 (defmethod handle-element-pre-collision ((element jump-ring-element) gamestate)
   (when (not (activated element))
     (setf (activated element) t)
+    (gamekit:play-sound 'portal-sound)
     (with-slots (player) gamestate
       (player-apply-impulse player (gamekit:vec2 0 25)))
     (add-timer (+ (now) 2)
