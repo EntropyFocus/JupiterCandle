@@ -137,7 +137,7 @@ where TICK-START denotes the tick-time when the state was activated.")
                         (and (not (player-has-state gamestate :on-ground))
                              (< vy -100)))
 
-      (player-set-state gamestate :fast-ascend (> vy 2000))
+      (player-set-state gamestate :fast-ascend (> vy 1500))
       (player-set-state gamestate :weee
                         (player-has-state gamestate :fast-ascend :at-least-ticks 15))
 
