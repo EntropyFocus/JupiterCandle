@@ -11,9 +11,6 @@
 (defparameter *bump-threshold* (expt (+ 50 *max-speed*) 2))
 
 
-(defvar *surface-v* (gamekit:vec2 0 0))
-
-
 (defvar *universe* nil)
 
 (defvar *left-pressed* nil)
@@ -30,6 +27,9 @@
    (tick
     :initform 0
     :documentation "Elapsed game ticks. Incremented on each GAMESTATE-STEP call.")
+   (height-record
+    :initform 0
+    :documentation "Maximum height achieved by the player so far.")
    (level-height
     :initform 0
     :documentation "Y position of the highest generated level element")
@@ -145,8 +145,9 @@
         (setf (ge.phy:body-linear-velocity (body player)) (gamekit:vec2 0 (gamekit:y velocity)))))))
 
 (defmethod act ((this gamestate))
-  (with-slots (player tick elements) this
+  (with-slots (player tick elements height-record) this
     (incf tick)
+    (setf height-record (max height-record (gamekit:y (player-position player))))
     (dolist (item elements)
       (element-act item tick))
     (update-run this)
@@ -216,8 +217,14 @@
   
   (gamekit:stop-sound 'game-sound))
 
+(defun draw-height-record (height-record)
+  (gamekit:draw-line (gamekit:vec2 0 height-record)
+                     (gamekit:vec2 640 height-record)
+                     (gamekit:vec4 0.4 0.1 0.1 1)
+                     :thickness 4.0))
+
 (defmethod render ((this gamestate))
-  (with-slots (player elements states level-height) this
+  (with-slots (player elements states level-height height-record) this
     (let* ((y-speed        (gamekit:y (player-speed player)))
            (staunch-factor (exp (- (/ (abs (max 0 (- y-speed 500))) 7000)))))
       (gamekit:with-pushed-canvas ()
@@ -226,6 +233,7 @@
           (draw-background y-offset)
           (gamekit:with-pushed-canvas ()
             (gamekit:translate-canvas 0 y-offset)
+            (draw-height-record height-record)
             (dolist (item elements)
               (render item))
             (render player))))
@@ -235,10 +243,14 @@
                        (gamekit:vec2 0 460) :fill-color (gamekit:vec4 1 1 1 1))
     (gamekit:draw-text (format nil "Highest Element Y: ~a" level-height)
                        (gamekit:vec2 0 440) :fill-color (gamekit:vec4 1 1 1 1))
-    (gamekit:draw-text (format nil "Current height: ~a" (gamekit:y (player-position player)))
-                       (gamekit:vec2 0 400) :fill-color (gamekit:vec4 1 1 1 1))
-    (gamekit:draw-text (format nil "Surface V: ~a" *surface-v*)
-                       (gamekit:vec2 0 380) :fill-color (gamekit:vec4 1 1 1 1))))
+    (let ((font (gamekit:make-font 'hud-font 24))
+          (text (format nil "Height Record: ~6,'0D" (floor height-record))))
+      (multiple-value-bind (origin width height) (gamekit:calc-text-bounds text font)
+        (declare (ignore origin))
+        (gamekit:draw-text text
+                           (gamekit:subt (gamekit:vec2 640 480) (gamekit:vec2 width height))
+                           :fill-color (gamekit:vec4 1 1 1 1)
+                           :font font)))))
 
 
 ;;; COLLISION HANDLING
@@ -279,7 +291,6 @@ physics engine should apply collision effects."
   (let* ((player-speed (player-speed (slot-value gamestate 'player)))
          (element-speed (element-speed element))
          (diff (gamekit:subt player-speed element-speed)))
-    (setq *surface-v* diff)
     (when (> (+ (expt (gamekit:x diff) 2) (expt (gamekit:y diff) 2)) *bump-threshold*)
       (gamekit:play-sound 'bump-sound)))
   (setf (ge.phy:collision-friction)         0.0)
