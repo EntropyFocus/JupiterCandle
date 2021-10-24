@@ -21,7 +21,7 @@
 (defparameter *bg-random-state* (make-random-state))
 
 (defparameter *parallax-factor* 1.7)
-(defparameter *parallax-factor-2* 20)
+(defparameter *parallax-factor-2* 80)
 
 (defun draw-background (y-offset)
   (let* ((parallax-offset (/ y-offset *parallax-factor*))

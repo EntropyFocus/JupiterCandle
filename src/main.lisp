@@ -20,6 +20,7 @@
     (setf *last-timestamp* time)))
 
 (defmethod gamekit:draw ((this jupiter-game))
+  (gamekit:draw-rect (gamekit:vec2 0 0) 640 480 :fill-paint (gamekit:vec4 0 0 0 1))
   (update-elapsed-time)
   (gamekit:draw-text (format nil "Elapsed time: ~a" *elapsed-time*) (gamekit:vec2 0 0))
   (render (current-state this)))
