@@ -6,6 +6,7 @@
   :components ((:module "src"
                 :components
                 ((:file "packages")
+                 (:file "patches")
                  (:file "timer")
                  (:file "assets")
                  (:file "welcome")

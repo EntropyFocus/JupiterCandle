@@ -36,6 +36,8 @@
   (setf (ge.phy:gravity *universe*) (gamekit:vec2 0 *gravity*))
   (setf (jupiter-gamestate this) (make-instance 'gamestate))
 
+  (init-sounds)
+
   (setf *last-timestamp* (now))
 
   (change-state this *welcome-state*))
