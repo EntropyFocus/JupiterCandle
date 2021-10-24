@@ -25,10 +25,14 @@
   (render (current-state this)))
 
 (defmethod gamekit:post-initialize ((this jupiter-game))
-  (setq *universe* (ge.phy:make-universe :2d :on-pre-solve
-                                         #'(lambda (this-shape that-shape)
-                                             (gamestate-handle-pre-collision (jupiter-gamestate this)
-                                                                             this-shape that-shape))))
+  (setq *universe* (ge.phy:make-universe
+                    :2d
+                    :on-pre-solve (lambda (this-shape that-shape)
+                                    (gamestate-handle-pre-collision (jupiter-gamestate this)
+                                                                    this-shape that-shape))
+                    :on-post-solve (lambda (this-shape that-shape)
+                                     (gamestate-handle-post-collision (jupiter-gamestate this)
+                                                                      this-shape that-shape))))
   (setf (ge.phy:gravity *universe*) (gamekit:vec2 0 *gravity*))
   (setf (jupiter-gamestate this) (make-instance 'gamestate))
 

@@ -239,16 +239,28 @@
 Return NIL if collision should be ignored, otherwise T if collision effects
 should be applied."))
 
+(defgeneric handle-element-post-collision (element gamestate)
+  (:documentation "Handle the after-effect of the player colliding 
+with ELEMENT."))
+
+
 (defun gamestate-handle-pre-collision (gamestate this-shape that-shape)
   "pre-solve callback to be provided to the physics engine. Return T if
 physics engine should apply collision effects."
   (with-slots (player) gamestate
     (let* ((this-sub (ge.phy:shape-substance this-shape))
            (that-sub (ge.phy:shape-substance that-shape)))
-      (if (eq this-sub player)
-          (handle-element-pre-collision that-sub gamestate)
-          (when (eq that-sub player)
-            (handle-element-pre-collision this-sub gamestate))))))
+      (cond
+        ((eq this-sub player) (handle-element-pre-collision that-sub gamestate))
+        ((eq that-sub player) (handle-element-pre-collision this-sub gamestate))))))
+
+(defun gamestate-handle-post-collision (gamestate this-shape that-shape)
+  (with-slots (player) gamestate
+    (let* ((this-sub (ge.phy:shape-substance this-shape))
+           (that-sub (ge.phy:shape-substance that-shape)))
+      (cond
+        ((eq this-sub player) (handle-element-post-collision that-sub gamestate))
+        ((eq that-sub player) (handle-element-post-collision this-sub gamestate))))))
 
 (defmethod handle-element-pre-collision ((element floor-element) gamestate)
   (when (not (player-has-state gamestate :jumped-recently))
@@ -259,6 +271,9 @@ physics engine should apply collision effects."
   (setf (ge.phy:collision-elasticity)       0.0)
   t)
 
+(defmethod handle-element-post-collision ((element floor-element) gamestate)
+  (log:info "PLAYER-FLOOR Surface Velocity" (ge.phy:collision-surface-velocity)))
+
 (defmethod handle-element-pre-collision ((element jump-ring-element) gamestate)
   (when (not (activated element))
     (setf (activated element) t)
@@ -267,4 +282,3 @@ physics engine should apply collision effects."
     (add-timer (+ (now) 2)
                (lambda () (setf (activated element) nil))))
   nil)
-
