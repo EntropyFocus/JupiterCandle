@@ -24,6 +24,6 @@
   (setf (gamekit:sound-gain 'bump-sound) 2.0)
   (setf (gamekit:sound-gain 'weee-sound) 0.7)
   (setf (gamekit:sound-gain 'aaah-sound) 1.5)
-  (setf (gamekit:sound-gain 'hit-ground-sound 2.0))
+  (setf (gamekit:sound-gain 'hit-ground-sound) 2.0)
   (setf (gamekit:sound-gain 'portal-sound) 2.0)
   (setf (gamekit:sound-gain 'game-sound) 0.5))

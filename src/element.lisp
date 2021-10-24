@@ -113,6 +113,11 @@ A level section generator can then provide an item like
                            (element-width this) (element-height this)
                            :stroke-paint (gamekit:vec4 1 0 0 1))))))
 
+;; Ground-like element. Elements of this class behave as elements for the
+;; Player to stand on.
+
+(defclass ground-like-element (boxed-element) ())
+
 ;; Floor element
 
 (gamekit:define-image jupiter-candle::ground-floor "textures/ground_floor.png")
@@ -122,7 +127,7 @@ A level section generator can then provide an item like
 (gamekit:define-image jupiter-candle::platform-xs "textures/platform_xs.png")
 (defparameter *floor-element-height* 16)
 
-(defclass floor-element (boxed-element)
+(defclass floor-element (ground-like-element)
   ((image :initarg :image)))
 
 (defmethod element-width ((this floor-element))
@@ -246,7 +251,7 @@ A level section generator can then provide an item like
    '((:active      :row 0 :frames 6 :speed 150))
    :origin (gamekit:vec2 53 25)))
 
-(defclass moving-element (boxed-element)
+(defclass moving-element (ground-like-element)
   ((width :initform 107 :reader element-width)
    (height :initform 16 :reader element-height)
    (sprite :initform (make-animated-sprite *moving-animation* :active))))

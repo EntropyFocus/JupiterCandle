@@ -45,7 +45,8 @@
 (defmethod gamekit:act ((this jupiter-game))
   (process-timers)
   (loop for i from 0 below *step-split* do
-        (ge.phy:observe-universe *universe* (/ *universe-step* *step-split*)))
+        (ge.phy:observe-universe *universe* (/ *universe-step* *step-split*))
+        (update-player-on-ground (jupiter-gamestate this)))
   (act (current-state this)))
 
 (defun change-state (jupiter-game new-state)

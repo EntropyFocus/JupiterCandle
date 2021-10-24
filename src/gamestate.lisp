@@ -38,12 +38,19 @@
    (current-player-anim
     :initform nil
     :documentation "Currently set player animation state.")
+   (ground-element
+    :initform nil
+    :documentation "Last ground element that the player was standing on.")
+   (last-ground-contact
+    :initform 0
+    :documentation "Last tick of collision with ground.")
+   (desired-run-velocity
+    :initform (gamekit:vec2 0 0)
+    :documentation "Desired player velocity while standing on a platform.")
    (states
     :initform nil
     :documentation "Set of active gamestates as assoc-list (STATE . TICK-START)
-where TICK-START denotes the tick-time when the state was activated.")
-   (desired-run-state :initform 0)
-   (run-state :initform 0)))
+where TICK-START denotes the tick-time when the state was activated.")))
 
 ;;-----------------
 
@@ -90,6 +97,7 @@ where TICK-START denotes the tick-time when the state was activated.")
   (case added-state
     (:has-jumped (gamekit:play-sound 'jump-sound))
     (:has-dashed (gamekit:play-sound 'dash-sound))
+    (:bumped (gamekit:play-sound 'bump-sound))
     (:weee  (gamekit:play-sound 'weee-sound))
     (:big-fall (gamekit:play-sound 'aaah-sound))
     (:hard-ground-hit (gamekit:play-sound 'hit-ground-sound))))
@@ -99,56 +107,68 @@ where TICK-START denotes the tick-time when the state was activated.")
   (case removed-state
     (:big-fall (gamekit:stop-sound 'aaah-sound))))
 
+(defun player-local-speed (gamestate)
+  "When standing on a platform that moves the player, the local
+player speed denotes the speed relative to that platform. In every
+other case, the speed is the same as the global player speed."
+  (with-slots (ground-element player) gamestate
+    (let ((speed (player-speed player)))
+      (if (and ground-element (player-has-state gamestate :on-ground))
+          (let ((e-speed (element-speed ground-element)))
+            (gamekit:subt speed e-speed))
+          speed))))
+
 (defun compute-state-changes (gamestate)
-  (with-slots (player) gamestate
-    (let* ((speed (player-speed player))
-           (vx (gamekit:x speed))
-           (vy (gamekit:y speed)))
-      (when (> (abs vy) 10)
-        (player-remove-state gamestate :on-ground))
+  (let* ((speed (player-local-speed gamestate))
+         (vx (gamekit:x speed))
+         (vy (gamekit:y speed)))
+    (with-slots (tick last-ground-contact) gamestate
+      (when (or (> (- tick last-ground-contact) 5) (> (abs vy) 10))
+        (player-remove-state gamestate :on-ground)))
 
-      (player-remove-state gamestate :dashing :if-older-than 26)
+    (player-remove-state gamestate :dashing :if-older-than 26)
+    (player-remove-state gamestate :bumped :if-older-than 30)
 
-      ;; Compute before :running
-      (when (and (player-has-state gamestate :running)
-                 (player-has-state gamestate :has-jumped))
-        (player-push-state gamestate :run-jump))
+    ;; Compute before :running
+    (when (and (player-has-state gamestate :running)
+               (player-has-state gamestate :has-jumped))
+      (player-push-state gamestate :run-jump))
 
-      (when (player-has-state gamestate :on-ground)
-        (player-remove-state gamestate :has-jumped)
-        (player-remove-state gamestate :run-jump)
-        (player-remove-state gamestate :has-dashed))
+    (when (player-has-state gamestate :on-ground)
+      (player-remove-state gamestate :has-jumped)
+      (player-remove-state gamestate :run-jump)
+      (player-remove-state gamestate :has-dashed))
 
-      (player-set-state gamestate :running 
-                        (and (player-has-state gamestate :on-ground)
-                             (or *left-pressed* *right-pressed*)
-                             (> (abs vx) 5)))
+    (player-set-state gamestate :running 
+                      (and (player-has-state gamestate :on-ground)
+                           (or *left-pressed* *right-pressed*)
+                           (> (abs vx) 5)))
 
-      (player-set-state gamestate :idleing
-                        (and (player-has-state gamestate :on-ground)
-                             (not (player-has-state gamestate :running))
-                             (not (player-has-state gamestate :dashing))))
+    (player-set-state gamestate :idleing
+                      (and (player-has-state gamestate :on-ground)
+                           (not (player-has-state gamestate :running))
+                           (not (player-has-state gamestate :dashing))))
 
-      (player-set-state gamestate :jump-mid
-                        (and (player-has-state gamestate :has-jumped)
-                             (< (abs vx) 150)))
+    (player-set-state gamestate :jump-mid
+                      (and (player-has-state gamestate :has-jumped)
+                           (< (abs vx) 150)))
 
-      (player-set-state gamestate :falling
-                        (and (not (player-has-state gamestate :on-ground))
-                             (< vy -100)))
+    (player-set-state gamestate :falling
+                      (and (not (player-has-state gamestate :on-ground))
+                           (< vy -100)))
 
-      (player-set-state gamestate :fast-ascend (> vy 1500))
-      (player-set-state gamestate :weee
-                        (player-has-state gamestate :fast-ascend :at-least-ticks 15))
+    (player-set-state gamestate :fast-ascend (> vy 1500))
+    (player-set-state gamestate :weee
+                      (player-has-state gamestate :fast-ascend :at-least-ticks 15))
 
-      ;; Compute before :big-fall
-      (player-set-state gamestate :hard-ground-hit
-                        (and (player-has-state gamestate :big-fall)
-                             (player-has-state gamestate :on-ground)))
+    ;; Compute before :big-fall
+    (player-set-state gamestate :hard-ground-hit
+                      (and (player-has-state gamestate :big-fall)
+                           (player-has-state gamestate :on-ground)))
 
-      (player-set-state gamestate :big-fall
-                        (and (< vy -1000)
-                             (player-has-state gamestate :falling :at-least-ticks 80))))))
+    (player-set-state gamestate :big-fall
+                      (and (< vy -1000)
+                           (player-has-state gamestate :falling :at-least-ticks 80)))))
 
 (defun player-has-state (gamestate state &key (at-least-ticks 0))
   (with-slots (tick) gamestate
@@ -178,19 +198,17 @@ where TICK-START denotes the tick-time when the state was activated.")
       (player-remove-state gamestate state)))
 
 (defun update-run (gamestate)
-  (with-slots (desired-run-state player) gamestate
-    (if (and *left-pressed* (not *right-pressed*))
-        (progn
-          (setf desired-run-state -1)
-          (setf (player-left-oriented-p player) t))
-        (if (and *right-pressed* (not *left-pressed*))
-            (progn
-              (setf desired-run-state 1)
-              (setf (player-left-oriented-p player) nil))
-            (setf desired-run-state 0)))
-    
-    (let ((desired-vx (* desired-run-state *max-speed*))
-          (vx (gamekit:x (player-speed player)))
+  (with-slots (player desired-run-velocity) gamestate
+    (let ((desired-vx
+            (cond
+              ((and *left-pressed* (not *right-pressed*))
+               (setf (player-left-oriented-p player) t)
+               (- *max-speed*))
+              ((and *right-pressed* (not *left-pressed*))
+               (setf (player-left-oriented-p player) nil)
+               *max-speed*)
+              (t 0)))
+          (vx (gamekit:x (player-local-speed gamestate)))
           (delta-vx (if (player-has-state gamestate :on-ground) 4 0.2)))
       (when (< (abs (- vx desired-vx)) 20)
         (setf delta-vx (/ delta-vx 10)))
@@ -198,10 +216,18 @@ where TICK-START denotes the tick-time when the state was activated.")
         (setf delta-vx (/ delta-vx 10)))
       (when (< (abs (- vx desired-vx)) 1)
         (setf delta-vx (/ delta-vx 10)))
-      (when (< vx desired-vx)
-        (player-apply-impulse player (gamekit:vec2 delta-vx 0)))
-      (when (> vx desired-vx)
-        (player-apply-impulse player (gamekit:vec2 (- delta-vx) 0))))))
+      (setf desired-run-velocity (gamekit:vec2 desired-vx 0))
+      (when (not (player-has-state gamestate :on-ground))
+        (cond
+          ((< vx desired-vx) (player-apply-impulse player (gamekit:vec2 delta-vx 0)))
+          ((> vx desired-vx) (player-apply-impulse player (gamekit:vec2 (- delta-vx) 0))))))))
+
+(defun update-player-on-ground (gamestate)
+  "Update the player speed relative to the platform the player is standing on."
+  (with-slots (ground-element player desired-run-velocity) gamestate
+    (when (and (player-has-state gamestate :on-ground :at-least-ticks 2) ground-element)
+      (let ((e-speed (element-speed ground-element)))
+        (setf (player-speed player) (gamekit:add e-speed desired-run-velocity))))))
 
 (defun constrain-player-position (player)
   (let ((position (player-position player))
@@ -244,6 +270,7 @@ where TICK-START denotes the tick-time when the state was activated.")
     (when (can-dash? gamestate)
       (player-push-state gamestate :has-dashed)
       (player-push-state gamestate :dashing)
+      (player-remove-state gamestate :on-ground)
       (player-apply-impulse player
                             (gamekit:vec2 (if (player-left-oriented-p player)
                                               (- *dash-force*)
@@ -288,7 +315,7 @@ where TICK-START denotes the tick-time when the state was activated.")
                      :thickness 4.0))
 
 (defmethod render ((this gamestate))
-  (with-slots (player elements states level-height height-record) this
+  (with-slots (player elements states level-height height-record desired-run-velocity) this
     (let* ((y-speed        (gamekit:y (player-speed player)))
            (staunch-factor (exp (- (/ (abs (max 0 (- y-speed 500))) 7000)))))
       (gamekit:with-pushed-canvas ()
@@ -300,15 +327,11 @@ where TICK-START denotes the tick-time when the state was activated.")
             (draw-height-record height-record)
             (dolist (item elements)
               (render item))
-            (render player))))
-      (gamekit:draw-text (format nil "Staunch Factor: ~a" staunch-factor)
-                         (gamekit:vec2 0 420) :fill-color (gamekit:vec4 1 1 1 1)))
-    (gamekit:draw-text (format nil "State: ~a" states)
+            (render player)))))
+    #++(gamekit:draw-text (format nil "State: ~a" states)
                        (gamekit:vec2 1 -0.9) :fill-color (gamekit:vec4 0 0 0 1))
-    (gamekit:draw-text (format nil "State: ~a" states)
+    #++(gamekit:draw-text (format nil "State: ~a" states)
                        (gamekit:vec2 0 0) :fill-color (gamekit:vec4 1 1 1 1))
-    (gamekit:draw-text (format nil "Highest Element Y: ~a" level-height)
-                       (gamekit:vec2 0 440) :fill-color (gamekit:vec4 1 1 1 1))
     (let ((font (gamekit:make-font 'hud-font 24))
           (text (format nil "Height Record: ~6,'0D" (floor height-record))))
       (multiple-value-bind (origin width height) (gamekit:calc-text-bounds text font)
@@ -353,42 +376,24 @@ physics engine should apply collision effects."
         ((eq this-sub player) (handle-element-post-collision that-sub gamestate))
         ((eq that-sub player) (handle-element-post-collision this-sub gamestate))))))
 
-(defmethod handle-element-pre-collision ((element floor-element) gamestate)
-  ;; This could be problematic when element is rotated. Need to check which side was bumped.
-  ;; Maybe easier to tell via another shape??
-  (player-push-state gamestate :on-ground)
-  (let* ((player-speed (player-speed (slot-value gamestate 'player)))
-         (element-speed (element-speed element))
-         (diff (gamekit:subt player-speed element-speed)))
-    (when (> (+ (expt (gamekit:x diff) 2) (expt (gamekit:y diff) 2)) *bump-threshold*)
-      (gamekit:play-sound 'bump-sound)))
-  (setf (ge.phy:collision-friction)         0.0)
-  (setf (ge.phy:collision-elasticity)       0.0)
-  #++(let ((v (element-speed element)))
-    (when (or (> (abs (gamekit:x v)) 0) (> (abs (gamekit:y v)) 0))
-      (with-slots (player) gamestate
-        (setf (player-speed player) v))
-      (setf *surface-v* v)))
-  t)
-
-(defmethod handle-element-pre-collision ((element moving-element) gamestate)
-  (when (not (player-has-state gamestate :jumped-recently))
-    (when (player-push-state gamestate :on-ground)
-      (player-remove-state gamestate :dashed)
-      (player-change-animation gamestate :hit-ground)))
-  (let* ((player-speed (player-speed (slot-value gamestate 'player)))
-         (element-speed (element-speed element))
-         (diff (gamekit:subt player-speed element-speed)))
-    (when (> (+ (expt (gamekit:x diff) 2) (expt (gamekit:y diff) 2)) *bump-threshold*)
-      (gamekit:play-sound 'bump-sound)))
-  (setf (ge.phy:collision-friction)         0.0)
-  (setf (ge.phy:collision-elasticity)       0.0)
-  #++(let ((v (element-speed element)))
-       (when (or (> (abs (gamekit:x v)) 0) (> (abs (gamekit:y v)) 0))
-         (with-slots (player) gamestate
-           (setf (player-speed player) v))
-         (setf *surface-v* v)))
-  t)
+(defmethod handle-element-pre-collision ((element ground-like-element) gamestate)
+  (with-slots (player ground-element last-ground-contact tick) gamestate
+    (let ((p-pos (player-position player))
+          (e-pos (element-position element)))
+      ;; This could be problematic when element is rotated. Need to check which side was bumped.
+      ;; Maybe easier to tell via another shape??
+      (when (> (gamekit:y p-pos) (gamekit:y e-pos))
+        (player-push-state gamestate :on-ground)
+        (setf ground-element element)
+        (setf last-ground-contact tick)))
+    (let* ((player-speed (player-speed player))
+           (element-speed (element-speed element))
+           (diff (gamekit:subt player-speed element-speed)))
+      (when (> (+ (expt (gamekit:x diff) 2) (expt (gamekit:y diff) 2)) *bump-threshold*)
+        (player-push-state gamestate :bumped)))
+    (setf (ge.phy:collision-friction)         0.0)
+    (setf (ge.phy:collision-elasticity)       0.0)
+    t))
 
 (defmethod handle-element-pre-collision ((element jump-ring-element) gamestate)
   (when (not (activated element))

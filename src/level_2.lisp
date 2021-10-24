@@ -75,5 +75,6 @@
    (list 'platform-xs :x 30 :y 240)
    (list 'platform-l :x 400 :y 380)
    (list 'text :text "C to dash" :x 80 :y 380 :font-size 20)
-   (list 'text :text "Have fun!" :x 320 :y 430 :font-size 30)))
+   (list 'text :text "Have fun!" :x 320 :y 430 :font-size 30)
+   (list 'jump-pad :x 660 :y 12 :force 100)))
 
