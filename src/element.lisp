@@ -151,7 +151,7 @@ A level section generator can then provide an item like
 
 ;; Jump Ring
 
-(gamekit:define-image jupiter-candle::portal-anim "textures/portal.png")
+(gamekit:define-image jupiter-candle::portal-anim "textures/Portal.png")
 
 (defparameter *portal-animations*
   (make-animated-sprite-resource

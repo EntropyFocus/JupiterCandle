@@ -1,4 +1,4 @@
-(defsystem "jupiter-candle"
+(asdf:defsystem "jupiter-candle"
   :version "0.1.0"
   :author "entropic games"
   :license ""
@@ -21,4 +21,6 @@
                  (:file "main")
                  (:file "ui"))))
   :description ""
-  :in-order-to ((test-op (test-op "JupiterCandle/tests"))))
+  :build-operation "program-op"
+  :build-pathname "jupiter-candle"
+  :entry-point "jupiter-candle:main")

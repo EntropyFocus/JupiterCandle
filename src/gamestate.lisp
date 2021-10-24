@@ -35,7 +35,13 @@
     :documentation "Y position of the highest generated level element")
    (player :initform (make-instance 'player :universe *universe*
                                             :position (gamekit:vec2 100 200)))
-   (states :initform nil)
+   (current-player-anim
+    :initform nil
+    :documentation "Currently set player animation state.")
+   (states
+    :initform nil
+    :documentation "Set of active gamestates as assoc-list (STATE . TICK-START)
+where TICK-START denotes the tick-time when the state was activated.")
    (desired-run-state :initform 0)
    (run-state :initform 0)))
 
@@ -59,36 +65,117 @@
             (setf level-height (generate-level-section gamestate level-height
                                                        generator))))))
 
-(defun gamestate-player-animation (gamestate)
+(defun player-change-animation (gamestate animation)
+  (with-slots (player current-player-anim) gamestate
+    (when (not (eq current-player-anim animation))
+      (setf current-player-anim animation)
+      (with-slots (sprite) player
+        (animated-sprite-change-animation sprite animation)))))
+
+(defun reset-player-animation (gamestate)
   "Return the correct player animation for GAMESTATE"
   (with-slots (states) gamestate
-    (cond ((member :dashed-recently states) :dash)
-          ((member :run states) :run)
-          ((member :on-ground states) :hit-ground)
-          ((t :jump)))))
+    (let ((anim (cond ((assoc :dashing states) :dash)
+                      ((assoc :run-jump states) :run-jump)
+                      ((assoc :running states) :run)
+                      ((assoc :on-ground states) :hit-ground)
+                      ((assoc :jump-mid states) :jump-mid)
+                      ((assoc :has-jumped states) :jump)
+                      ((assoc :falling states) :jump)
+                      (t :idle))))
+      (player-change-animation gamestate anim))))
 
-(defun player-has-state (gamestate state)
-  (member state (slot-value gamestate 'states)))
+(defun on-state-added (gamestate added-state)
+  (declare (ignore gamestate))
+  (case added-state
+    (:has-jumped (gamekit:play-sound 'jump-sound))
+    (:has-dashed (gamekit:play-sound 'dash-sound))
+    (:weee  (gamekit:play-sound 'weee-sound))
+    (:big-fall (gamekit:play-sound 'aaah-sound))
+    (:hard-ground-hit (gamekit:play-sound 'hit-ground-sound))))
+
+(defun on-state-removed (gamestate removed-state)
+  (declare (ignore gamestate))
+  (case removed-state
+    (:big-fall (gamekit:stop-sound 'aaah-sound))))
+
+(defun compute-state-changes (gamestate)
+  (with-slots (player) gamestate
+    (let* ((speed (player-speed player))
+           (vx (gamekit:x speed))
+           (vy (gamekit:y speed)))
+      (when (> (abs vy) 10)
+        (player-remove-state gamestate :on-ground))
+
+      (player-remove-state gamestate :dashing :if-older-than 26)
+
+      ;; Compute before :running
+      (when (and (player-has-state gamestate :running)
+                 (player-has-state gamestate :has-jumped))
+        (player-push-state gamestate :run-jump))
+
+      (when (player-has-state gamestate :on-ground)
+        (player-remove-state gamestate :has-jumped)
+        (player-remove-state gamestate :run-jump)
+        (player-remove-state gamestate :has-dashed))
+
+      (player-set-state gamestate :running 
+                        (and (player-has-state gamestate :on-ground)
+                             (or *left-pressed* *right-pressed*)
+                             (> (abs vx) 5)))
+
+      (player-set-state gamestate :idleing
+                        (and (player-has-state gamestate :on-ground)
+                             (not (player-has-state gamestate :running))
+                             (not (player-has-state gamestate :dashing))))
+
+      (player-set-state gamestate :jump-mid
+                        (and (player-has-state gamestate :has-jumped)
+                             (< (abs vx) 150)))
+
+      (player-set-state gamestate :falling
+                        (and (not (player-has-state gamestate :on-ground))
+                             (< vy -100)))
+
+      (player-set-state gamestate :fast-ascend (> vy 1500))
+      (player-set-state gamestate :weee
+                        (player-has-state gamestate :fast-ascend :at-least-ticks 15))
+
+      ;; Compute before :big-fall
+      (player-set-state gamestate :hard-ground-hit
+                        (and (player-has-state gamestate :big-fall)
+                             (player-has-state gamestate :on-ground)))
+
+      (player-set-state gamestate :big-fall
+                        (and (< vy -1000)
+                             (player-has-state gamestate :falling :at-least-ticks 80))))))
+
+(defun player-has-state (gamestate state &key (at-least-ticks 0))
+  (with-slots (tick) gamestate
+    (alexandria:when-let ((start-tick (alexandria:assoc-value (slot-value gamestate 'states) state)))
+      (>= (- tick start-tick) at-least-ticks))))
 
 (defun player-push-state (gamestate state)
   "Add STATE to the current set of states. Return T if state has been added."
   (if (player-has-state gamestate state)
       nil
-      (progn
-        (pushnew state (slot-value gamestate 'states))
+      (with-slots (states tick) gamestate
+        (push (cons state tick) states)
+        (on-state-added gamestate state)
         t)))
 
-(defun player-remove-state (gamestate state)
+(defun player-remove-state (gamestate state &key (if-older-than 0))
   "Remove STATE from the current set of states. Return T if state has been removed."
-  (when (player-has-state gamestate state)
+  (when (player-has-state gamestate state :at-least-ticks if-older-than)
     (with-slots (states) gamestate
-      (setf states (delete state states)))
+      (alexandria:removef states state :key #'car)
+      (on-state-removed gamestate state))
     t))
 
-(defun player-change-animation (gamestate animation)
-  (with-slots (player) gamestate
-    (with-slots (sprite) player
-      (animated-sprite-change-animation sprite animation))))
+(defun player-set-state (gamestate state &optional (on t))
+  (if on
+      (player-push-state gamestate state)
+      (player-remove-state gamestate state)))
 
 (defun update-run (gamestate)
   (with-slots (desired-run-state player) gamestate
@@ -104,7 +191,6 @@
     
     (let ((desired-vx (* desired-run-state *max-speed*))
           (vx (gamekit:x (player-speed player)))
-          (vy (gamekit:y (player-speed player)))
           (delta-vx (if (player-has-state gamestate :on-ground) 4 0.2)))
       (when (< (abs (- vx desired-vx)) 20)
         (setf delta-vx (/ delta-vx 10)))
@@ -115,22 +201,7 @@
       (when (< vx desired-vx)
         (player-apply-impulse player (gamekit:vec2 delta-vx 0)))
       (when (> vx desired-vx)
-        (player-apply-impulse player (gamekit:vec2 (- delta-vx) 0)))
-      (when (> (abs vy) 10)
-        (player-remove-state gamestate :on-ground))
-      (if (player-has-state gamestate :on-ground)
-          (if (> (abs vx) 5)
-              (when (player-push-state gamestate :run)
-                (player-change-animation gamestate :idle-to-run))
-              (progn
-                (when (player-remove-state gamestate :run)
-                  (player-change-animation gamestate :idle))))
-          (progn
-            (player-remove-state gamestate :run)
-            (when (< vy 0)
-              (if (< (abs vx) 40)
-                  (player-change-animation gamestate :jump-mid)
-                  (player-change-animation gamestate :jump-fall))))))))
+        (player-apply-impulse player (gamekit:vec2 (- delta-vx) 0))))))
 
 (defun constrain-player-position (player)
   (let ((position (player-position player))
@@ -150,6 +221,8 @@
     (setf height-record (max height-record (gamekit:y (player-position player))))
     (dolist (item elements)
       (element-act item tick))
+    (compute-state-changes this)
+    (reset-player-animation this)
     (update-run this)
     (constrain-player-position player)
     (update-level this (+ 500 (gamekit:y (player-position player))))))
@@ -160,26 +233,17 @@
   (with-slots (player) gamestate
     (when (player-has-state gamestate :on-ground)
       (player-remove-state gamestate :on-ground)
-      (when (player-push-state gamestate :jumped-recently)
-        (gamekit:play-sound 'jump-sound)
-        (player-change-animation gamestate :jump)
-        (add-timer (+ (now) 0.3)
-                   (lambda () (player-remove-state gamestate :jumped-recently))))
+      (player-push-state gamestate :has-jumped)
       (player-apply-impulse player (gamekit:vec2 0 *jump-force*)))))
 
 (defun can-dash? (gamestate)
-  (and (not (player-has-state gamestate :dashed))
-       (not (player-has-state gamestate :dashed-recently))))
+  (not (player-has-state gamestate :has-dashed)))
 
 (defun dash (gamestate)
   (with-slots (player) gamestate
     (when (can-dash? gamestate)
-      (gamekit:play-sound 'dash-sound)
-      (player-change-animation gamestate :dash)
-      (player-push-state gamestate :dashed)
-      (player-push-state gamestate :dashed-recently)
-      (add-timer (+ (now) 0.7)
-                 (lambda () (player-remove-state gamestate :dashed-recently)))
+      (player-push-state gamestate :has-dashed)
+      (player-push-state gamestate :dashing)
       (player-apply-impulse player
                             (gamekit:vec2 (if (player-left-oriented-p player)
                                               (- *dash-force*)
@@ -239,8 +303,10 @@
             (render player))))
       (gamekit:draw-text (format nil "Staunch Factor: ~a" staunch-factor)
                          (gamekit:vec2 0 420) :fill-color (gamekit:vec4 1 1 1 1)))
-    (gamekit:draw-text (format nil "Player State: ~a" states)
-                       (gamekit:vec2 0 460) :fill-color (gamekit:vec4 1 1 1 1))
+    (gamekit:draw-text (format nil "State: ~a" states)
+                       (gamekit:vec2 1 -0.9) :fill-color (gamekit:vec4 0 0 0 1))
+    (gamekit:draw-text (format nil "State: ~a" states)
+                       (gamekit:vec2 0 0) :fill-color (gamekit:vec4 1 1 1 1))
     (gamekit:draw-text (format nil "Highest Element Y: ~a" level-height)
                        (gamekit:vec2 0 440) :fill-color (gamekit:vec4 1 1 1 1))
     (let ((font (gamekit:make-font 'hud-font 24))
@@ -288,10 +354,9 @@ physics engine should apply collision effects."
         ((eq that-sub player) (handle-element-post-collision this-sub gamestate))))))
 
 (defmethod handle-element-pre-collision ((element floor-element) gamestate)
-  (when (not (player-has-state gamestate :jumped-recently))
-    (when (player-push-state gamestate :on-ground)
-      (player-remove-state gamestate :dashed)
-      (player-change-animation gamestate :hit-ground)))
+  ;; This could be problematic when element is rotated. Need to check which side was bumped.
+  ;; Maybe easier to tell via another shape??
+  (player-push-state gamestate :on-ground)
   (let* ((player-speed (player-speed (slot-value gamestate 'player)))
          (element-speed (element-speed element))
          (diff (gamekit:subt player-speed element-speed)))
