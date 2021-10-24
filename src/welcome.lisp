@@ -17,8 +17,6 @@ the gas planet. Can the few remaining
 crew at the bottom reach the control
 center in time to save us all?
 
-[arrow keys] to move and jump
-
 Press SPACE to start the game"
    :separator '(#\Newline)))
 
