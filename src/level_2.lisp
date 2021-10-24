@@ -54,3 +54,15 @@
     (setf result (append result (railgun first-exit-x 100 3)))
     (push (list 'platform-s :x (random 640) :y 4200) result)
     result))
+
+(define-level-section-generator tutorial
+  (list
+   (list 'text :text "Left, Right to move" :x 30 :y 80 :font-size 20)
+   (list 'text :text "Up to jump" :x 300 :y 170 :font-size 20)
+   (list 'platform-m :x 500 :y 140)
+   (list 'platform-s :x 190 :y 200)
+   (list 'platform-xs :x 30 :y 240)
+   (list 'platform-l :x 400 :y 380)
+   (list 'text :text "C to dash" :x 80 :y 380 :font-size 20)
+   (list 'text :text "Have fun!" :x 320 :y 430 :font-size 30)))
+

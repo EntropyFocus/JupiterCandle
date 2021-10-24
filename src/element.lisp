@@ -184,7 +184,27 @@ A level section generator can then provide an item like
   (with-slots (activated) this
     (draw-animated-sprite (slot-value this 'sprite) (element-position this))))
 
-;; Windmill
+;; Text Element
+
+(defclass text-element (level-element)
+  ((text :initarg :text)
+   (font :initarg :font)))
+
+(defmethod render ((this text-element))
+  (with-slots (text font) this
+    (gamekit:draw-text text (gamekit:add (gamekit:vec2 3 -3) (element-position this))
+                       :fill-color (gamekit:vec4 0.3 0.1 0.1 1)
+                       :font font)
+    (gamekit:draw-text text (element-position this)
+                       :fill-color (gamekit:vec4 0.7 0.1 0.1 1)
+                       :font font)))
+
+(define-element-constructor 'text (level-height &key (text "") (x 0) (y 0) (font-size 32))
+  (make-instance 'text-element
+                 :level-height level-height
+                 :x x :y y
+                 :text text
+                 :font (gamekit:make-font 'hud-font font-size)))
 
 ;; (defclass windmill-element (level-element)
 ;;   (shapes :initform nil))
