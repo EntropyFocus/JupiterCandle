@@ -186,9 +186,11 @@ A level section generator can then provide an item like
 
 ;; Jump Pad
 
+(gamekit:define-image jupiter-candle::jump-pad "textures/jump_pad.png")
+
 (defclass jump-pad-element (boxed-element)
-  ((width :initform 100 :reader element-width)
-   (height :initform 10 :reader element-height)
+  ((width :initform 107 :reader element-width)
+   (height :initform 20 :reader element-height)
    (force :initarg :force)))
 
 (defmethod render ((this jump-pad-element))
@@ -199,12 +201,36 @@ A level section generator can then provide an item like
         (ge.vg:rotate-canvas (element-rotation this))
         (ge.vg:translate-canvas (- (/ (element-width this) 2))
                                 (- (/ (element-height this) 2)))
-        (gamekit:draw-rect (gamekit:vec2 0 0)
-                           (element-width this) (element-height this)
-                           :fill-paint (gamekit:vec4 0 0.3 0.7 1))))))
+        (gamekit:draw-image (gamekit:vec2 0 0) 'jump-pad)))))
 
 (define-element-constructor 'jump-pad (level-height &key (x 0) (y 0) (rotation 0) (force 20))
   (make-instance 'jump-pad-element
+                 :level-height level-height
+                 :x x :y y
+                 :rotation rotation
+                 :force force))
+
+;; Trampoline Pad
+
+(gamekit:define-image jupiter-candle::trampoline-pad "textures/trampoline_pad.png")
+
+(defclass trampoline-pad-element (boxed-element)
+  ((width :initform 107 :reader element-width)
+   (height :initform 16 :reader element-height)
+   (force :initarg :force)))
+
+(defmethod render ((this trampoline-pad-element))
+  (with-slots (width height) this
+    (ge.vg:with-retained-canvas
+      (let ((origin (element-position this)))
+        (ge.vg:translate-canvas (gamekit:x origin) (gamekit:y origin))
+        (ge.vg:rotate-canvas (element-rotation this))
+        (ge.vg:translate-canvas (- (/ (element-width this) 2))
+                                (- (/ (element-height this) 2)))
+        (gamekit:draw-image (gamekit:vec2 0 0) 'trampoline-pad)))))
+
+(define-element-constructor 'trampoline-pad (level-height &key (x 0) (y 0) (rotation 0) (force 20))
+  (make-instance 'trampoline-pad-element
                  :level-height level-height
                  :x x :y y
                  :rotation rotation
