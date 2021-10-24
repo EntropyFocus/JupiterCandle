@@ -32,12 +32,12 @@ generator GENERATOR-NAME. Returns the y position of the highest generated elemen
             (push (make-element level-height spec) elements)))
     (+ level-height max-y)))
 
-(defun random-generator-name ()
-  (let ((idx (random (hash-table-count *section-generators*))))
-    (loop for key being the hash-keys of *section-generators*
-          for x from 0
-          when (= x idx)
-          return key)))
+(defun random-generator-name (&key excluding)
+  (let* ((names (loop for key being the hash-keys of *section-generators*
+                      when (not (member key excluding))
+                      collect key))
+         (idx (random (length names))))
+    (nth idx names)))
 
 ;; -------------------------------------------------
 

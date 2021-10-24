@@ -55,7 +55,7 @@
   (with-slots (level-height) gamestate
     (loop while (< level-height desired-height) do
           (let ((generator (if (and (= level-height 0) *first-generator*)
-                               *first-generator* (random-generator-name))))
+                               *first-generator* (random-generator-name :excluding '(tutorial)))))
             (setf level-height (generate-level-section gamestate level-height
                                                        generator))))))
 
