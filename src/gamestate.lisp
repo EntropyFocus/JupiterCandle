@@ -262,7 +262,11 @@ should be applied."))
 
 (defgeneric handle-element-post-collision (element gamestate)
   (:documentation "Handle the after-effect of the player colliding 
-with ELEMENT."))
+with ELEMENT.")
+  (:method (element gamestate)
+    (declare (ignore element))
+    (declare (ignore gamestate))
+    nil))
 
 
 (defun gamestate-handle-pre-collision (gamestate this-shape that-shape)
@@ -302,9 +306,6 @@ physics engine should apply collision effects."
       (setf *surface-v* v)))
   t)
 
-(defmethod handle-element-post-collision ((element floor-element) gamestate)
-  nil)
-
 (defmethod handle-element-pre-collision ((element jump-ring-element) gamestate)
   (when (not (activated element))
     (setf (activated element) t)
@@ -314,3 +315,10 @@ physics engine should apply collision effects."
     (add-timer (+ (now) 2)
                (lambda () (setf (activated element) nil))))
   nil)
+
+(defmethod handle-element-pre-collision ((element jump-pad-element) gamestate)
+  (with-slots (player) gamestate
+    (when (> (gamekit:y (player-position player)) (gamekit:y (element-position element)))
+      (setf (ge.phy:collision-elasticity) 1.0)
+      (with-slots (force) element
+        (player-apply-impulse player (gamekit:vec2 0 force))))))
