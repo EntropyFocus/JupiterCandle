@@ -13,11 +13,16 @@
 (gamekit:define-sound jupiter-candle::jump-sound "sound/SFX_jump.wav")
 (gamekit:define-sound jupiter-candle::bump-sound "sound/SFX_bump.wav")
 (gamekit:define-sound jupiter-candle::portal-sound "sound/SFX_portal.wav")
+(gamekit:define-sound jupiter-candle::aaah-sound "sound/SFX_aah.wav")
+(gamekit:define-sound jupiter-candle::weee-sound "sound/SFX_wee.wav")
+(gamekit:define-sound jupiter-candle::hit-ground-sound "sound/SFX_hit_ground.wav")
 
 
 (defun init-sounds ()
   (setf (gamekit:sound-gain 'dash-sound) 2.0)
   (setf (gamekit:sound-gain 'jump-sound) 2.0)
   (setf (gamekit:sound-gain 'bump-sound) 2.0)
+  (setf (gamekit:sound-gain 'weee-sound) 0.15)
+  (setf (gamekit:sound-gain 'aaah-sound) 1.5)
   (setf (gamekit:sound-gain 'portal-sound) 2.0)
   (setf (gamekit:sound-gain 'game-sound) 0.5))

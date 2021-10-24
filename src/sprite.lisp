@@ -27,7 +27,17 @@ named animations. ORIGIN marks the origin point of the sprite.
 
 Each list item has the structure
 
-   (NAME &key ROW FRAMES SPEED)."
+   (NAME &key ROW FRAMES (SPEED 100) (SKIP 0) NEXT)
+
+where
+  - NAME is the name of the animation sequence for later reference
+  - ROW (counting from 0) is the row in the tileset image
+  - FRAMES denotes the number of frames in an animation sequence
+  - SPEED in ms. Time between each animation frame.
+  - SKIP. Skip the first SKIP frames of an animation sequence
+  - NEXT is an animation name. If non-NIL change animation to NEXT
+    after animation sequence is done. If NEXT is NIL, loop the
+    animation."
   (let ((this (make-instance 'animated-sprite-resource
                              :image image
                              :width width
@@ -52,7 +62,7 @@ Each list item has the structure
                           :width width :height height :mirror-x mirror-x))))
 
 (defclass animation-state ()
-  ((timestamp :initform 0)
+  ((timestamp :initarg :timestamp)
    (resource :initarg :resource) 
    (frametime :initarg :frametime)
    (total-length :initarg :total-length)
@@ -64,8 +74,9 @@ Each list item has the structure
     (setf timestamp (mod (+ timestamp *elapsed-time*) total-length)
           frame     (floor timestamp frametime))))
 
-(defun make-animation-state (resource row frames speed)
+(defun make-animation-state (resource row frames speed skip)
   (let ((state (make-instance 'animation-state
+                              :timestamp (* skip speed)
                               :resource resource
                               :frametime speed
                               :total-length (* frames speed)
@@ -108,11 +119,12 @@ Each list item has the structure
   (with-slots (state resource timers) sprite
     (cancel-timers timers)
     (destructuring-bind
-        (&key (row 0) (frames 1) (speed 100) next)
+        (&key (row 0) (frames 1) (speed 100) (skip 0) next)
         (animation-spec resource animation-name)
-      (setf state (make-animation-state resource row frames speed))
+      (setf state (make-animation-state resource row frames speed skip))
       (when next
-        (add-timer (+ (now) (/ (slot-value state 'total-length) 1000))
-                   (lambda ()
-                     (animated-sprite-change-animation sprite next))
-                   timers)))))
+        (with-slots (timestamp total-length) state
+          (add-timer (+ (now) (/ (- total-length timestamp) 1000))
+                     (lambda ()
+                       (animated-sprite-change-animation sprite next))
+                     timers))))))

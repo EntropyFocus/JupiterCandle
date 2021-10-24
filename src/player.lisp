@@ -15,6 +15,7 @@
      (:jump-mid    :row 6  :frames 1)
      (:jump-fall   :row 7  :frames 1)
      (:hit-ground  :row 8  :frames 2 :speed 300 :next :idle)
+     (:run-jump    :row 9  :frames 14 :speed 80 :skip 2 :next :jump-fall)
      (:dash        :row 13 :frames 4))
    :origin (gamekit:vec2 (/ 96 2) 21)))
 
