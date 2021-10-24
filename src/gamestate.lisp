@@ -17,7 +17,7 @@
 (defvar *right-pressed* nil)
 (defvar *up-pressed* nil)
 
-(defparameter *first-generator* 'railgun
+(defparameter *first-generator* 'cone
   "Specifies the first generator applied at the ground level section.")
 
 (defclass gamestate ()

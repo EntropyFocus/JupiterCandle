@@ -4,9 +4,12 @@
 (define-level-section-generator railgun
   (let* ((start-x (random 640))
          (result 
-           (loop for y from 100 to 260 by 40
+           (loop repeat 6
+                 for y from 180 by 40
                  collect (list 'jump-ring :x start-x :y y))))
-    (push (list 'platform-l :x (random 640) :y (+ 1800 (random 800))) result)
+    (push (list 'platform-m :x (- start-x 200) :y 80) result)
+    (push (list 'platform-m :x (+ start-x 200) :y 80) result)
+    (push (list 'platform-s :x (random 640) :y (+ 1000 (random 1400))) result)
     result))
 
 (define-level-section-generator frogger
@@ -19,3 +22,35 @@
                     (list (funcall random-platform)
                           :x (lambda (tick) (+ x-offset (* (sin (/ tick x-speed)) x-range)))
                           :y (+ 70 (* level 80)))))))
+
+(defun railgun (start-x start-y &optional (count 3))
+  (loop repeat count
+        for y from start-y by 40
+        collect
+        (list 'jump-ring :x start-x :y y)))
+
+(defun build-cone (height &key (exit-x 320))
+  (let ((result nil))
+    (loop repeat 2
+          for x from 10 by 140
+          do
+          (push (list 'platform-l :x (- x (- 320 exit-x))
+                                  :y (+ 100 height (* x 2)) :rotation 1.1)
+                result)
+          (push (list 'platform-l :x (- 640 x (- 320 exit-x))
+                                  :y (+ 100 height (* x 2)) :rotation (- 1.1))
+                result))
+    (push (list 'platform-l :x (- exit-x 240) :y (+ height 520)) result)
+    (push (list 'platform-l :x (+ exit-x 240) :y (+ height 520)) result)
+    (setf result (append result (railgun exit-x (+ height 490) 3)))
+    result))
+
+(define-level-section-generator cone
+  (let* ((first-exit-x (random 640))
+         (result (loop repeat 2
+                       for y from 0 by 2000
+                       for exit-x = first-exit-x then (random 640)
+                       nconcing (build-cone y :exit-x exit-x))))
+    (setf result (append result (railgun first-exit-x 100 3)))
+    (push (list 'platform-s :x (random 640) :y 4200) result)
+    result))
