@@ -17,7 +17,7 @@
 (defvar *right-pressed* nil)
 (defvar *up-pressed* nil)
 
-(defparameter *first-generator* 'cone
+(defparameter *first-generator* 'tutorial
   "Specifies the first generator applied at the ground level section.")
 
 (defclass gamestate ()
@@ -53,9 +53,9 @@
 (defun update-level (gamestate desired-height)
   "Generate level elements at DESIRED-HEIGHT."
   (with-slots (level-height) gamestate
-    (let ((generator (if (and (= level-height 0) *first-generator*)
-                         *first-generator* (random-generator-name))))
-      (loop while (< level-height desired-height) do
+    (loop while (< level-height desired-height) do
+          (let ((generator (if (and (= level-height 0) *first-generator*)
+                               *first-generator* (random-generator-name :excluding '(tutorial)))))
             (setf level-height (generate-level-section gamestate level-height
                                                        generator))))))
 

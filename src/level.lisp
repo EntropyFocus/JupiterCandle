@@ -32,21 +32,21 @@ generator GENERATOR-NAME. Returns the y position of the highest generated elemen
             (push (make-element level-height spec) elements)))
     (+ level-height max-y)))
 
-(defun random-generator-name ()
-  (let ((idx (random (hash-table-count *section-generators*))))
-    (loop for key being the hash-keys of *section-generators*
-          for x from 0
-          when (= x idx)
-          return key)))
+(defun random-generator-name (&key excluding)
+  (let* ((names (loop for key being the hash-keys of *section-generators*
+                      when (not (member key excluding))
+                      collect key))
+         (idx (random (length names))))
+    (nth idx names)))
 
 ;; -------------------------------------------------
 
 (defparameter *static-level*
   (list
    (list 'ground-floor :x 320 :y 10)
-   (list 'platform-m :x (lambda (tick) (+ 480 (* (sin (/ tick 80)) 20)))
+   #++(list 'platform-m :x (lambda (tick) (+ 480 (* (sin (/ tick 80)) 20)))
                      :y (lambda (tick) (+ 120 (* (sin (/ tick 100)) 100))))
-   (list 'platform-m :x 200 :y 70 :rotation 1.2)))
+   #++(list 'platform-m :x 200 :y 70 :rotation 1.2)))
 
 (defun init-level-elements ()
   (loop for spec in *static-level*
