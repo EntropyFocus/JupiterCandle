@@ -5,27 +5,28 @@
 
 (defparameter *welcome-text*
   (uiop:split-string
-   "The sun is turning into a red giant
+   "The sun is turning into a red giant,
 threatening Earth and all life on it.
 Humanity has created a giant fusion
-engine to push Jupiter around and use
-its gravitational pull to move Earth
-to safety.
+engine to push Jupiter around and
+use its gravitational pull to move
+Earth to safety.
 
-After a violent solar flare, the damaged
+After a violent solar flare the damaged
 engine is bound to crash into the gas 
-planet. Can the few remaining crew at 
+planet.
+Can the few remaining crew at 
 the bottom reach the control center 
 in time to save us all?
 
---
+
 
 (created (CL) '(Entropic Games))
 
 = Philipp Sieweck
 = Gereon Bartel
 
---
+
 
 external assets
 (details in readme.txt)
@@ -45,7 +46,7 @@ Fonts:
 - Vice Versus - Chequered Ink
 - Hemi Head 426 - Typodermic Fonts
 
---
+
 
 Thanks for playing!
 "
