@@ -190,7 +190,7 @@ A level section generator can then provide an item like
 
 (defclass jump-pad-element (boxed-element)
   ((width :initform 107 :reader element-width)
-   (height :initform 20 :reader element-height)
+   (height :initform 16 :reader element-height)
    (force :initarg :force)))
 
 (defmethod render ((this jump-pad-element))
@@ -235,6 +235,30 @@ A level section generator can then provide an item like
                  :x x :y y
                  :rotation rotation
                  :force force))
+
+;; Moving platform
+
+(gamekit:define-image jupiter-candle::moving-platform-anim "textures/moving-platform.png")
+
+(defparameter *moving-animation*
+  (make-animated-sprite-resource
+   'moving-platform-anim 107 50
+   '((:active      :row 0 :frames 6 :speed 150))
+   :origin (gamekit:vec2 53 25)))
+
+(defclass moving-element (boxed-element)
+  ((width :initform 107 :reader element-width)
+   (height :initform 16 :reader element-height)
+   (sprite :initform (make-animated-sprite *moving-animation* :active))))
+
+(defmethod render ((this moving-element))
+  (ge.vg:with-retained-canvas
+    (draw-animated-sprite (slot-value this 'sprite) (gamekit:add (element-position this) (gamekit:vec2 0 -13)))))
+
+(define-element-constructor 'hover-pad (level-height &key (x 0) (y 0))
+  (make-instance 'moving-element
+                 :level-height level-height
+                 :x x :y y))
 
 ;; Text Element
 

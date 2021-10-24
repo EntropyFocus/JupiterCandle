@@ -23,6 +23,17 @@
                           :x (lambda (tick) (+ x-offset (* (sin (/ tick x-speed)) x-range)))
                           :y (+ 70 (* level 80)))))))
 
+(define-level-section-generator frogger2
+  (let* ((platforms '(hover-pad jump-ring))
+         (random-platform (lambda () (nth (random (length platforms)) platforms))))
+    (loop for level from 0 to 6
+          collect (let ((x-offset (random 640))
+                        (x-speed (+ (random 100) 100))
+                        (x-range (+ (random 320) 100)))
+                    (list (funcall random-platform)
+                          :x (lambda (tick) (+ x-offset (* (sin (/ tick x-speed)) x-range)))
+                          :y (+ 70 (* level 80)))))))
+
 (defun railgun (start-x start-y &optional (count 3))
   (loop repeat count
         for y from start-y by 40
