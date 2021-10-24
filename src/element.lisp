@@ -52,6 +52,10 @@ A level section generator can then provide an item like
   (with-slots (body) this
     (ge.phy:body-position body)))
 
+(defmethod element-speed ((this level-element))
+  (with-slots (body) this
+    (ge.phy:body-linear-velocity body)))
+
 (defmethod element-rotation ((this level-element))
   (with-slots (body) this
     (ge.ng:mat2->euler-angle (ge.phy:body-rotation body))))

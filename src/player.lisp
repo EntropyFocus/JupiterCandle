@@ -44,6 +44,9 @@
 (defun player-speed (player)
   (ge.phy:body-linear-velocity (body player)))
 
+(defun (setf player-speed) (new-speed player)
+  (setf (ge.phy:body-linear-velocity (body player)) new-speed))
+
 (defun player-apply-impulse (player offset &key reset-vx reset-vy)
   (with-slots (body) player
     (when (or reset-vx reset-vy)

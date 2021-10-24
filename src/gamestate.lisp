@@ -9,6 +9,10 @@
 
 (defparameter *max-speed* 150)
 
+
+(defvar *surface-v* (gamekit:vec2 0 0))
+
+
 (defvar *universe* nil)
 
 (defvar *left-pressed* nil)
@@ -167,6 +171,7 @@
 (defun dash (gamestate)
   (with-slots (player) gamestate
     (when (can-dash? gamestate)
+      (gamekit:play-sound 'dash-sound)
       (player-change-animation gamestate :dash)
       (player-push-state gamestate :dashed)
       (player-push-state gamestate :dashed-recently)
@@ -229,7 +234,9 @@
     (gamekit:draw-text (format nil "Highest Element Y: ~a" level-height)
                        (gamekit:vec2 0 440) :fill-color (gamekit:vec4 1 1 1 1))
     (gamekit:draw-text (format nil "Current height: ~a" (gamekit:y (player-position player)))
-                       (gamekit:vec2 0 400) :fill-color (gamekit:vec4 1 1 1 1))))
+                       (gamekit:vec2 0 400) :fill-color (gamekit:vec4 1 1 1 1))
+    (gamekit:draw-text (format nil "Surface V: ~a" *surface-v*)
+                       (gamekit:vec2 0 380) :fill-color (gamekit:vec4 1 1 1 1))))
 
 
 ;;; COLLISION HANDLING
@@ -267,12 +274,17 @@ physics engine should apply collision effects."
     (when (player-push-state gamestate :on-ground)
       (player-remove-state gamestate :dashed)
       (player-change-animation gamestate :hit-ground)))
-  (setf (ge.phy:collision-friction)         1.0)
+  (setf (ge.phy:collision-friction)         0.0)
   (setf (ge.phy:collision-elasticity)       0.0)
+  #++(let ((v (element-speed element)))
+    (when (or (> (abs (gamekit:x v)) 0) (> (abs (gamekit:y v)) 0))
+      (with-slots (player) gamestate
+        (setf (player-speed player) v))
+      (setf *surface-v* v)))
   t)
 
 (defmethod handle-element-post-collision ((element floor-element) gamestate)
-  (log:info "PLAYER-FLOOR Surface Velocity" (ge.phy:collision-surface-velocity)))
+  nil)
 
 (defmethod handle-element-pre-collision ((element jump-ring-element) gamestate)
   (when (not (activated element))
