@@ -1,10 +1,14 @@
 (in-package :jupiter-candle)
 
+(defvar *production-p* nil)
+
 (defvar *number-of-loaded-resources* 0)
 (defparameter *requested-resources* (make-hash-table))
 
 (defun asset-path (pathname)
-  (asdf:system-relative-pathname :jupiter-candle (merge-pathnames pathname "assets/")))
+  (if *production-p*
+      (merge-pathnames pathname "assets/")
+      (asdf:system-relative-pathname :jupiter-candle (merge-pathnames pathname "assets/"))))
 
 (defmacro register-font (name path)
   `(when (not (gethash ',name *requested-resources*))
@@ -71,3 +75,10 @@
   (register-image jupiter-candle::layer-2-bg "textures/background.png")
 
   (register-image jupiter-candle::player-anim "textures/player.png"))
+
+(export 'switch-to-production)
+(defun switch-to-production ()
+  "TODO"
+  (setq *production-p* t)
+  (setq *number-of-loaded-resources* 0)
+  (setq *requested-resources* (make-hash-table)))
