@@ -4,7 +4,7 @@
 (defparameter *requested-resources* (make-hash-table))
 
 (defun asset-path (pathname)
-  (asdf:system-relative-pathname :jupiter-candle (merge-pathnames pathname "assets/")))
+  pathname)
 
 (defmacro register-font (name path)
   `(when (not (gethash ',name *requested-resources*))
@@ -27,7 +27,7 @@
      (when (gamekit:gamekit)
        (gamekit:prepare-resources ',name))))
 
-;(gamekit:register-resource-package :jupiter-candle (asdf:system-relative-pathname :jupiter-candle "assets/"))
+(gamekit:register-resource-package :jupiter-candle (asdf:system-relative-pathname :jupiter-candle "assets/"))
 
 (defun load-main-menu-resources ()
   (register-font jupiter-candle::menu-font "fonts/hemihead.ttf")
