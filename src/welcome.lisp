@@ -71,7 +71,7 @@ Thanks for playing!
 
   (gamekit:draw-image (gamekit:vec2 0 0) 'welcome2)
 
-  (if t
+  (if (all-resources-loaded-p)
       (progn
         (gamekit:draw-text "press SPACE to go save the" (gamekit:vec2 109 76) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 24))
         (gamekit:draw-text "press SPACE to go save the" (gamekit:vec2 112 73) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 24))
@@ -97,8 +97,12 @@ Thanks for playing!
   (load-main-menu-resources))
 
 (defmethod activate ((this welcome-state))
-  (gamekit:bind-button :space :pressed (lambda () (start-game (gamekit:gamekit))))
-  (gamekit:play-sound 'welcome-sound :looped-p t))
+  (gamekit:bind-button :space :pressed
+                       (lambda ()
+                         (when (all-resources-loaded-p)
+                           (start-game (gamekit:gamekit)))))
+  (gamekit:play-sound 'welcome-sound :looped-p t)
+  (load-game-resources))
 
 (defmethod deactivate ((this welcome-state))
   (gamekit:bind-button :space :pressed nil)
