@@ -26,7 +26,7 @@ in time to save us all?
 
 
 external assets
-(details in readme.txt)
+(details in readme)
 
 Music:
 - This menu music - Fred Patry
