@@ -120,11 +120,6 @@ A level section generator can then provide an item like
 
 ;; Floor element
 
-(gamekit:define-image jupiter-candle::ground-floor "textures/ground_floor.png")
-(gamekit:define-image jupiter-candle::platform-l "textures/platform_l.png")
-(gamekit:define-image jupiter-candle::platform-m "textures/platform_m.png")
-(gamekit:define-image jupiter-candle::platform-s "textures/platform_s.png")
-(gamekit:define-image jupiter-candle::platform-xs "textures/platform_xs.png")
 (defparameter *floor-element-height* 16)
 
 (defclass floor-element (ground-like-element)
@@ -217,8 +212,6 @@ A level section generator can then provide an item like
 
 ;; Trampoline Pad
 
-(gamekit:define-image jupiter-candle::trampoline-pad "textures/trampoline_pad.png")
-
 (defclass trampoline-pad-element (boxed-element)
   ((width :initform 107 :reader element-width)
    (height :initform 16 :reader element-height)
@@ -242,8 +235,6 @@ A level section generator can then provide an item like
                  :force force))
 
 ;; Moving platform
-
-(gamekit:define-image jupiter-candle::moving-platform-anim "textures/moving-platform.png")
 
 (defparameter *moving-animation*
   (make-animated-sprite-resource
@@ -286,10 +277,3 @@ A level section generator can then provide an item like
                  :x x :y y
                  :text text
                  :font (gamekit:make-font 'hud-font font-size)))
-
-;; (defclass windmill-element (level-element)
-;;   (shapes :initform nil))
-
-;; (defmethod initialize-instance :after ((this level-element) &key)
-;;   (with-slots (shapes body) this
-;;     nil))

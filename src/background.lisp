@@ -1,17 +1,5 @@
 (in-package :jupiter-candle)
 
-(gamekit:define-image jupiter-candle::bg-1 "textures/tilemap1.png")
-(gamekit:define-image jupiter-candle::bg-2 "textures/tilemap2.png")
-(gamekit:define-image jupiter-candle::bg-3 "textures/tilemap3.png")
-(gamekit:define-image jupiter-candle::bg-4 "textures/tilemap4.png")
-(gamekit:define-image jupiter-candle::bg-5 "textures/tilemap5.png")
-(gamekit:define-image jupiter-candle::bg-6 "textures/tilemap6.png")
-(gamekit:define-image jupiter-candle::bg-7 "textures/tilemap7.png")
-(gamekit:define-image jupiter-candle::bg-8 "textures/tilemap8.png")
-(gamekit:define-image jupiter-candle::bg-9 "textures/tilemap9.png")
-
-(gamekit:define-image jupiter-candle::layer-2-bg "textures/background.png")
-
 (defparameter *bg-layer-2-height* 1000)
 
 (defparameter *number-of-bg-images* 9)

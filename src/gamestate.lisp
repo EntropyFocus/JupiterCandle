@@ -22,7 +22,7 @@
 
 (defclass gamestate ()
   ((elements
-    :initform (init-level-elements)
+    :initform nil
     :documentation "List of level elements the player can interact with")
    (tick
     :initform 0
@@ -33,8 +33,7 @@
    (level-height
     :initform 0
     :documentation "Y position of the highest generated level element")
-   (player :initform (make-instance 'player :universe *universe*
-                                            :position (gamekit:vec2 100 200)))
+   (player :initform nil)
    (current-player-anim
     :initform nil
     :documentation "Currently set player animation state.")
@@ -242,6 +241,9 @@ other case, the speed is the same as the global player speed."
         (setf (ge.phy:body-linear-velocity (body player)) (gamekit:vec2 0 (gamekit:y velocity)))))))
 
 (defmethod act ((this gamestate))
+  (loop for i from 0 below *step-split* do
+        (ge.phy:observe-universe *universe* (/ *universe-step* *step-split*))
+        (update-player-on-ground this))
   (with-slots (player tick elements height-record) this
     (incf tick)
     (setf height-record (max height-record (gamekit:y (player-position player))))
@@ -280,7 +282,34 @@ other case, the speed is the same as the global player speed."
 
 ;;-----------------
 
+(defmethod prepare-resources ((this gamestate))
+  (load-game-resources))
+
 (defmethod activate ((this gamestate))
+  (setq *universe* (ge.phy:make-universe
+                    :2d
+                    :on-pre-solve (lambda (this-shape that-shape)
+                                    (gamestate-handle-pre-collision this
+                                                                    this-shape that-shape))
+                    :on-post-solve (lambda (this-shape that-shape)
+                                     (gamestate-handle-post-collision this
+                                                                      this-shape that-shape))))
+  (setf (ge.phy:gravity *universe*) (gamekit:vec2 0 *gravity*))
+
+  (with-slots (player) this
+    (setf player (make-instance 'player :universe *universe*
+                                        :position (gamekit:vec2 100 200))))
+  (reinitialize-level this)
+
+  (setf (gamekit:sound-gain 'dash-sound) 2.0)
+  (setf (gamekit:sound-gain 'jump-sound) 2.0)
+  (setf (gamekit:sound-gain 'bump-sound) 2.0)
+  (setf (gamekit:sound-gain 'weee-sound) 0.7)
+  (setf (gamekit:sound-gain 'aaah-sound) 1.5)
+  (setf (gamekit:sound-gain 'hit-ground-sound) 2.0)
+  (setf (gamekit:sound-gain 'portal-sound) 2.0)
+  (setf (gamekit:sound-gain 'game-sound) 0.5)
+  
   (gamekit:bind-button :up :pressed (lambda () (jump this)))
   (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))
   (gamekit:bind-button :left :released (lambda () (setf *left-pressed* nil)))

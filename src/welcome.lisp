@@ -1,8 +1,5 @@
 (in-package :jupiter-candle)
 
-(gamekit:define-image jupiter-candle::welcome "textures/title.png")
-(gamekit:define-image jupiter-candle::welcome2 "textures/title2.png")
-
 (defparameter *welcome-text*
   (uiop:split-string
    "The sun is turning into a red giant
@@ -95,6 +92,9 @@ Thanks for playing!
     (when (> y-pos *text-end-y*)
       (decf y-pos *text-end-y*)
       (incf y-pos *text-start-y*))))
+
+(defmethod prepare-resources ((this welcome-state))
+  (load-main-menu-resources))
 
 (defmethod activate ((this welcome-state))
   (gamekit:bind-button :space :pressed (lambda () (start-game (gamekit:gamekit))))

@@ -1,7 +1,5 @@
 (in-package :jupiter-candle)
 
-(gamekit:define-image jupiter-candle::player-anim "textures/player.png")
-
 (defparameter *player-size* (gamekit:vec2 30 42))
 (defparameter *player-origin* (gamekit:div *player-size* 2))
 
