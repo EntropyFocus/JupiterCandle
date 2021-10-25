@@ -27,7 +27,7 @@
   (let* ((platforms '(hover-pad hover-pad hover-pad jump-ring))
          (random-platform (lambda () (nth (random (length platforms)) platforms))))
     (loop for level from 0 to 6
-          collect (let ((x-offset (random 640))
+          collect (let ((x-offset (random 440))
                         (x-speed (+ (random 100) 100))
                         (x-range (+ (random 320) 100)))
                     (list (funcall random-platform)

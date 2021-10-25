@@ -66,7 +66,7 @@ Thanks for playing!
   (gamekit:draw-image (gamekit:vec2 0 0) 'welcome)
   (with-slots (y-pos) this
     (loop for line in *welcome-text*
-        for y from 850 downto 0 by 20
+        for y from 880 downto 0 by 20
         for x = 280
         do
           (gamekit:draw-text line (gamekit:vec2 (+ x 1) (+ y-pos (- y 1))) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 20))
