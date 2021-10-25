@@ -37,7 +37,6 @@
   (loop for name in resource-names
         when (eq (gethash name *requested-resources*) :requested)
         do
-        (log:info name)
         (setf (gethash name *requested-resources*) :loaded)
         (incf *number-of-loaded-resources*))
   (let ((next-state (waiting-state this)))
