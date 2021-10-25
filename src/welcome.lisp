@@ -2,27 +2,28 @@
 
 (defparameter *welcome-text*
   (uiop:split-string
-   "The sun is turning into a red giant
+   "The sun is turning into a red giant,
 threatening Earth and all life on it.
 Humanity has created a giant fusion
-engine to push Jupiter around and use
-its gravitational pull to move Earth
-to safety.
+engine to push Jupiter around and
+use its gravitational pull to move
+Earth to safety.
 
-After a violent solar flare, the damaged
+After a violent solar flare the damaged
 engine is bound to crash into the gas 
-planet. Can the few remaining crew at 
+planet.
+Can the few remaining crew at 
 the bottom reach the control center 
 in time to save us all?
 
---
+
 
 (created (CL) '(Entropic Games))
 
 = Philipp Sieweck
 = Gereon Bartel
 
---
+
 
 external assets
 (details in readme.txt)
@@ -42,7 +43,7 @@ Fonts:
 - Vice Versus - Chequered Ink
 - Hemi Head 426 - Typodermic Fonts
 
---
+
 
 Thanks for playing!
 "
@@ -62,7 +63,7 @@ Thanks for playing!
   (gamekit:draw-image (gamekit:vec2 0 0) 'welcome)
   (with-slots (y-pos) this
     (loop for line in *welcome-text*
-        for y from 850 downto 0 by 20
+        for y from 880 downto 0 by 20
         for x = 280
         do
           (gamekit:draw-text line (gamekit:vec2 (+ x 1) (+ y-pos (- y 1))) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 20))
