@@ -308,7 +308,7 @@ other case, the speed is the same as the global player speed."
   (setf (gamekit:sound-gain 'aaah-sound) 1.5)
   (setf (gamekit:sound-gain 'hit-ground-sound) 2.0)
   (setf (gamekit:sound-gain 'portal-sound) 2.0)
-  (setf (gamekit:sound-gain 'game-sound) 0.5)
+  (setf (gamekit:sound-gain 'game-sound) 0.2)
   
   (gamekit:bind-button :up :pressed (lambda () (jump this)))
   (gamekit:bind-button :left :pressed (lambda () (setf *left-pressed* t)))
