@@ -11,11 +11,11 @@ A jump'n'run in the distant future.
 
 ## Installation
 
-'
+```
 git clone
 (ql:quickload :jupiter-candle)
 (jupiter-candle:main)
-'
+```
 
 ## Author
 
