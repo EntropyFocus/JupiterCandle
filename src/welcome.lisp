@@ -60,32 +60,32 @@ Thanks for playing!
 
 
 (defmethod render ((this welcome-state))
-  (gamekit:draw-image (gamekit:vec2 0 0) 'welcome)
+  (gamekit:draw-image (gamekit:vec2 0 0) :welcome)
   (with-slots (y-pos) this
     (loop for line in *welcome-text*
         for y from 880 downto 0 by 20
         for x = 280
         do
-          (gamekit:draw-text line (gamekit:vec2 (+ x 1) (+ y-pos (- y 1))) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 20))
-          (gamekit:draw-text line (gamekit:vec2 (- x 1) (+ y-pos (+ y 1))) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 20))
-          (gamekit:draw-text line (gamekit:vec2 x (+ y-pos y)) :fill-color *font-color* :font (gamekit:make-font 'menu-font 20))))
+          (gamekit:draw-text line (gamekit:vec2 (+ x 1) (+ y-pos (- y 1))) :fill-color *shadow-color* :font (gamekit:make-font :menu-font 20))
+          (gamekit:draw-text line (gamekit:vec2 (- x 1) (+ y-pos (+ y 1))) :fill-color *shadow-color* :font (gamekit:make-font :menu-font 20))
+          (gamekit:draw-text line (gamekit:vec2 x (+ y-pos y)) :fill-color *font-color* :font (gamekit:make-font :menu-font 20))))
 
-  (gamekit:draw-image (gamekit:vec2 0 0) 'welcome2)
+  (gamekit:draw-image (gamekit:vec2 0 0) :welcome2)
 
   (if (all-resources-loaded-p)
       (progn
-        (gamekit:draw-text "press SPACE to go save the" (gamekit:vec2 109 76) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 24))
-        (gamekit:draw-text "press SPACE to go save the" (gamekit:vec2 112 73) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 24))
-        (gamekit:draw-text "press SPACE to go save the" (gamekit:vec2 110 75) :fill-color *font-color* :font (gamekit:make-font 'menu-font 24)))
+        (gamekit:draw-text "press SPACE to go save the" (gamekit:vec2 109 76) :fill-color *shadow-color* :font (gamekit:make-font :menu-font 24))
+        (gamekit:draw-text "press SPACE to go save the" (gamekit:vec2 112 73) :fill-color *shadow-color* :font (gamekit:make-font :menu-font 24))
+        (gamekit:draw-text "press SPACE to go save the" (gamekit:vec2 110 75) :fill-color *font-color* :font (gamekit:make-font :menu-font 24)))
       (progn
-        (gamekit:draw-text "loading..." (gamekit:vec2 109 76) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 24))
-        (gamekit:draw-text "loading..." (gamekit:vec2 112 73) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 24))
-        (gamekit:draw-text "loading..." (gamekit:vec2 110 75) :fill-color *font-color* :font (gamekit:make-font 'menu-font 24))))
+        (gamekit:draw-text "loading..." (gamekit:vec2 109 76) :fill-color *shadow-color* :font (gamekit:make-font :menu-font 24))
+        (gamekit:draw-text "loading..." (gamekit:vec2 112 73) :fill-color *shadow-color* :font (gamekit:make-font :menu-font 24))
+        (gamekit:draw-text "loading..." (gamekit:vec2 110 75) :fill-color *font-color* :font (gamekit:make-font :menu-font 24))))
 
         
-  (gamekit:draw-text "Jupiter Candle" (gamekit:vec2 129 21) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 76))
-  (gamekit:draw-text "Jupiter Candle" (gamekit:vec2 135 15) :fill-color *shadow-color* :font (gamekit:make-font 'menu-font 76))
-  (gamekit:draw-text "Jupiter Candle" (gamekit:vec2 130 20) :fill-color *font-color* :font (gamekit:make-font 'menu-font 76)))
+  (gamekit:draw-text "Jupiter Candle" (gamekit:vec2 129 21) :fill-color *shadow-color* :font (gamekit:make-font :menu-font 76))
+  (gamekit:draw-text "Jupiter Candle" (gamekit:vec2 135 15) :fill-color *shadow-color* :font (gamekit:make-font :menu-font 76))
+  (gamekit:draw-text "Jupiter Candle" (gamekit:vec2 130 20) :fill-color *font-color* :font (gamekit:make-font :menu-font 76)))
 
 (defmethod act ((this welcome-state))
   (with-slots (y-pos) this
@@ -102,9 +102,9 @@ Thanks for playing!
                        (lambda ()
                          (when (all-resources-loaded-p)
                            (start-game (gamekit:gamekit)))))
-  (gamekit:play-sound 'welcome-sound :looped-p t)
+  (gamekit:play-sound :welcome-sound :looped-p t)
   (load-game-resources))
 
 (defmethod deactivate ((this welcome-state))
   (gamekit:bind-button :space :pressed nil)
-  (gamekit:stop-sound 'welcome-sound))
+  (gamekit:stop-sound :welcome-sound))
