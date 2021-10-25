@@ -151,8 +151,6 @@ A level section generator can then provide an item like
 
 ;; Jump Ring
 
-(gamekit:define-image jupiter-candle::portal-anim "textures/Portal.png")
-
 (defparameter *portal-animations*
   (make-animated-sprite-resource
    'portal-anim 130 100
@@ -185,8 +183,6 @@ A level section generator can then provide an item like
     (draw-animated-sprite (slot-value this 'sprite) (element-position this))))
 
 ;; Jump Pad
-
-(gamekit:define-image jupiter-candle::jump-pad "textures/jump_pad.png")
 
 (defclass jump-pad-element (boxed-element)
   ((width :initform 107 :reader element-width)
