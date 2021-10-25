@@ -2,7 +2,7 @@
 
 ;; RANDOM LEVEL GENERATOR
 
-(defparameter *1-object-1-in* 1.1)
+(defparameter *1-object-1-in* 1.2)
 (defparameter *2-object-1-in* 1.2)
 (defparameter *platform-1-in* 1.7)
 (defparameter *moving-1-in* 2.5)
@@ -30,7 +30,7 @@
 
 (define-level-section-generator random ()
   (let ((result nil))
-    (loop for level-height from 50 below 1000 by 90
+    (loop for level-height from 50 below 1000 by 80
           do (when (< (random *1-object-1-in*) 1)
                (push (place-object level-height) result)
                (when (< (random *2-object-1-in*) 1)
